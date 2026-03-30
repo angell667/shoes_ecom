@@ -1,0 +1,667 @@
+<script setup>
+import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useCartStore } from '../stores/cart'
+import { useOrderStore } from '../stores/orders'
+import { useAuthStore } from '../stores/auth'
+import axios from 'axios'
+
+const router = useRouter()
+const cartStore = useCartStore()
+const orderStore = useOrderStore()
+const authStore = useAuthStore()
+
+const form = ref({
+  shipping_address: '',
+  payment_method: 'credit_card',
+  notes: '',
+  coupon_code: ''
+})
+
+const loading = ref(false)
+const error = ref('')
+const couponLoading = ref(false)
+const couponError = ref('')
+const couponSuccess = ref('')
+const appliedCoupon = ref(null)
+const discount = ref(0)
+const enabledPaymentMethods = ref({})
+
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(price)
+}
+
+const subtotal = computed(() => cartStore.total)
+const shipping = computed(() => subtotal.value >= 100 ? 0 : 10)
+const tax = computed(() => subtotal.value * 0.1)
+const total = computed(() => subtotal.value + shipping.value + tax.value - discount.value)
+
+// Apply coupon code
+const applyCoupon = async () => {
+  if (!form.value.coupon_code.trim()) {
+    couponError.value = 'Please enter a coupon code'
+    return
+  }
+
+  couponLoading.value = true
+  couponError.value = ''
+  couponSuccess.value = ''
+
+  try {
+    const response = await axios.post('/api/coupons/validate', {
+      code: form.value.coupon_code,
+      subtotal: subtotal.value
+    })
+
+    appliedCoupon.value = response.data.coupon
+    discount.value = response.data.discount
+    couponSuccess.value = `Coupon applied! You save ${formatPrice(response.data.discount)}`
+  } catch (err) {
+    couponError.value = err.response?.data?.error || 'Invalid or expired coupon code'
+    appliedCoupon.value = null
+    discount.value = 0
+  } finally {
+    couponLoading.value = false
+  }
+}
+
+// Remove coupon
+const removeCoupon = () => {
+  appliedCoupon.value = null
+  discount.value = 0
+  form.value.coupon_code = ''
+  couponSuccess.value = ''
+  couponError.value = ''
+}
+
+const placeOrder = async () => {
+  if (!form.value.shipping_address.trim()) {
+    error.value = 'Please enter a shipping address'
+    return
+  }
+  
+  error.value = ''
+  loading.value = true
+  
+  try {
+    const response = await orderStore.createOrder({
+      shipping_address: form.value.shipping_address,
+      payment_method: form.value.payment_method,
+      notes: form.value.notes,
+      coupon_code: appliedCoupon.value ? form.value.coupon_code : null
+    })
+    
+    await cartStore.fetchCart()
+    
+    // Redirect to payment page for credit card and PayPal
+    // For COD, redirect directly to order details
+    if (form.value.payment_method === 'cod') {
+      router.push(`/orders/${orderStore.currentOrder.id}`)
+    } else {
+      router.push(`/payment/${orderStore.currentOrder.id}`)
+    }
+  } catch (err) {
+    error.value = err.message || 'Failed to place order'
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchEnabledPaymentMethods = async () => {
+  try {
+    const response = await axios.get('/api/payment-methods')
+    enabledPaymentMethods.value = response.data
+    
+    // Set default payment method to first available
+    const methods = Object.keys(response.data)
+    if (methods.length > 0 && !methods.includes(form.value.payment_method)) {
+      form.value.payment_method = methods[0]
+    }
+  } catch (err) {
+    console.error('Failed to fetch payment methods:', err)
+  }
+}
+
+const showCreditCard = computed(() => 'credit_card' in enabledPaymentMethods.value)
+const showPayPal = computed(() => 'paypal' in enabledPaymentMethods.value)
+const showCOD = computed(() => 'cod' in enabledPaymentMethods.value)
+
+onMounted(async () => {
+  if (cartStore.isEmpty) {
+    router.push('/cart')
+  }
+  if (authStore.user?.address) {
+    form.value.shipping_address = authStore.user.address
+  }
+  await fetchEnabledPaymentMethods()
+})
+</script>
+
+<template>
+  <div class="checkout-page">
+    <div class="container">
+      <h1 class="page-title">Checkout</h1>
+
+      <div class="checkout-layout">
+        <div class="checkout-form">
+          <div v-if="error" class="error-message">
+            {{ error }}
+          </div>
+
+          <!-- Shipping Address -->
+          <div class="checkout-section">
+            <h2>
+              <span class="step-number">1</span>
+              Shipping Address
+            </h2>
+            <div class="form-group">
+              <label class="form-label">Full Address</label>
+              <textarea 
+                v-model="form.shipping_address"
+                class="form-input"
+                rows="4"
+                placeholder="Enter your complete shipping address including street, city, state, and zip code"
+                required
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Coupon Code -->
+          <div class="checkout-section">
+            <h2>
+              <span class="step-number">2</span>
+              Coupon Code
+            </h2>
+            <div class="coupon-section">
+              <div v-if="!appliedCoupon" class="coupon-input-group">
+                <input 
+                  v-model="form.coupon_code"
+                  type="text"
+                  class="coupon-input"
+                  placeholder="Enter coupon code"
+                  @keyup.enter="applyCoupon"
+                />
+                <button 
+                  @click="applyCoupon"
+                  :disabled="couponLoading || !form.coupon_code.trim()"
+                  class="btn-apply-coupon"
+                >
+                  {{ couponLoading ? 'Checking...' : 'Apply' }}
+                </button>
+              </div>
+              
+              <div v-else class="coupon-applied">
+                <div class="coupon-info">
+                  <span class="coupon-badge">{{ appliedCoupon.code }}</span>
+                  <span class="coupon-discount">-{{ formatPrice(discount) }}</span>
+                </div>
+                <button @click="removeCoupon" class="btn-remove-coupon">Remove</button>
+              </div>
+              
+              <p v-if="couponError" class="coupon-error">{{ couponError }}</p>
+              <p v-if="couponSuccess" class="coupon-success">{{ couponSuccess }}</p>
+            </div>
+          </div>
+
+          <!-- Payment Method -->
+          <div class="checkout-section">
+            <h2>
+              <span class="step-number">3</span>
+              Payment Method
+            </h2>
+            <div v-if="Object.keys(enabledPaymentMethods).length === 0" class="no-payment-methods">
+              <p>No payment methods available. Please contact the store administrator.</p>
+            </div>
+            <div v-else class="payment-options">
+              <label v-if="showCreditCard" class="payment-option" :class="{ active: form.payment_method === 'credit_card' }">
+                <input type="radio" v-model="form.payment_method" value="credit_card" />
+                <div class="payment-content">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10"/>
+                  </svg>
+                  <div>
+                    <span class="payment-name">Credit Card</span>
+                    <span class="payment-desc">Visa, Mastercard, Amex via Stripe</span>
+                  </div>
+                </div>
+              </label>
+              <label v-if="showPayPal" class="payment-option" :class="{ active: form.payment_method === 'paypal' }">
+                <input type="radio" v-model="form.payment_method" value="paypal" />
+                <div class="payment-content">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788l.038-.2.728-4.62.047-.258a.933.933 0 0 1 .921-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z"/>
+                  </svg>
+                  <div>
+                    <span class="payment-name">PayPal</span>
+                    <span class="payment-desc">Pay securely with PayPal</span>
+                  </div>
+                </div>
+              </label>
+              <label v-if="showCOD" class="payment-option" :class="{ active: form.payment_method === 'cod' }">
+                <input type="radio" v-model="form.payment_method" value="cod" />
+                <div class="payment-content">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"/>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                  </svg>
+                  <div>
+                    <span class="payment-name">Cash on Delivery</span>
+                    <span class="payment-desc">Pay when you receive</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Order Notes -->
+          <div class="checkout-section">
+            <h2>
+              <span class="step-number">4</span>
+              Order Notes (Optional)
+            </h2>
+            <div class="form-group">
+              <textarea 
+                v-model="form.notes"
+                class="form-input"
+                rows="3"
+                placeholder="Add any special instructions for your order..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="order-summary">
+          <h3>Order Summary</h3>
+          
+          <div class="summary-items">
+            <div v-for="item in cartStore.items" :key="item.id" class="summary-item">
+              <img :src="item.product?.image || 'https://via.placeholder.com/60'" :alt="item.product?.name" />
+              <div class="item-info">
+                <span class="item-name">{{ item.product?.name }}</span>
+                <span class="item-qty">Qty: {{ item.quantity }}</span>
+              </div>
+              <span class="item-price">{{ formatPrice(item.product?.effective_price * item.quantity) }}</span>
+            </div>
+          </div>
+
+          <div class="summary-totals">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span>{{ formatPrice(subtotal) }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Shipping</span>
+              <span>{{ shipping === 0 ? 'Free' : formatPrice(shipping) }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Tax (10%)</span>
+              <span>{{ formatPrice(tax) }}</span>
+            </div>
+            <div v-if="discount > 0" class="summary-row discount">
+              <span>Discount</span>
+              <span>-{{ formatPrice(discount) }}</span>
+            </div>
+            <div class="summary-total">
+              <span>Total</span>
+              <span>{{ formatPrice(total) }}</span>
+            </div>
+          </div>
+
+          <button 
+            @click="placeOrder" 
+            :disabled="loading || cartStore.isEmpty"
+            class="btn btn-primary btn-lg w-full place-order-btn"
+          >
+            {{ loading ? 'Placing Order...' : 'Place Order' }}
+          </button>
+
+          <p class="secure-text">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Your payment information is secure
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.checkout-page {
+  padding: 2rem 0 4rem;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 2rem;
+}
+
+.checkout-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.checkout-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.error-message {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.checkout-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+}
+
+.checkout-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+/* Coupon Section */
+.coupon-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.coupon-input-group {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.coupon-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--gray-200);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+.coupon-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.btn-apply-coupon {
+  padding: 0.75rem 1.5rem;
+  background: var(--gray-800);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-apply-coupon:hover:not(:disabled) {
+  background: var(--gray-900);
+}
+
+.btn-apply-coupon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.coupon-applied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: rgba(34, 197, 94, 0.1);
+  border: 2px solid #22c55e;
+  border-radius: 0.5rem;
+}
+
+.coupon-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.coupon-badge {
+  background: #22c55e;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.coupon-discount {
+  font-weight: 700;
+  color: #22c55e;
+}
+
+.btn-remove-coupon {
+  background: none;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.coupon-error {
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.coupon-success {
+  color: #22c55e;
+  font-size: 0.875rem;
+}
+
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.payment-option {
+  display: block;
+  cursor: pointer;
+}
+
+.payment-option input {
+  display: none;
+}
+
+.payment-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 2px solid var(--gray-200);
+  border-radius: 0.75rem;
+  transition: all 0.2s;
+}
+
+.payment-option.active .payment-content {
+  border-color: var(--primary);
+  background: rgba(37, 99, 235, 0.05);
+}
+
+.payment-content svg {
+  width: 32px;
+  height: 32px;
+  color: var(--gray-600);
+}
+
+.payment-option.active .payment-content svg {
+  color: var(--primary);
+}
+
+.payment-name {
+  display: block;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.payment-desc {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--gray-500);
+}
+
+.no-payment-methods {
+  padding: 24px;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  color: #92400e;
+  text-align: center;
+}
+
+.order-summary {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  position: sticky;
+  top: 100px;
+}
+
+.order-summary h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.summary-items {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.summary-item img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+}
+
+.item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-name {
+  display: block;
+  font-weight: 500;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-qty {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.item-price {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.summary-totals {
+  margin-bottom: 1.5rem;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+  color: var(--gray-600);
+}
+
+.summary-row.discount {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.summary-total {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 0;
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--gray-200);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.place-order-btn {
+  margin-bottom: 1rem;
+}
+
+.secure-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.secure-text svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 1024px) {
+  .checkout-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .order-summary {
+    position: static;
+    order: -1;
+  }
+}
+</style>
