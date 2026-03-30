@@ -1,0 +1,7 @@
+node_modules/
+.zip
+*.zip
+backend/vendor/
+backend/storage/logs/*
+backend/storage/framework/*
+backend/database/database.sqlite
