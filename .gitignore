@@ -1,7 +1,34 @@
+# Dependencies
 node_modules/
-.zip
+vendor/
+
+# Build outputs
+dist/
+build/
 *.zip
-backend/vendor/
+
+# Environment files
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
 backend/storage/logs/*
 backend/storage/framework/*
+
+# Database
 backend/database/database.sqlite
+
+# Cache
+backend/bootstrap/cache/*
+frontend/dist/
