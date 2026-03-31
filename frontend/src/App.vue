@@ -25,7 +25,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div id="app">
+  <div id="app" class="min-h-screen flex flex-col font-sans">
     <!-- Admin Layout -->
     <template v-if="isAdminRoute">
       <AdminLayout />
@@ -34,22 +34,34 @@ onMounted(async () => {
     <!-- Customer Layout -->
     <template v-else>
       <AppHeader />
-      <main class="main-content">
-        <router-view />
+      <main class="flex-1">
+        <router-view v-slot="{ Component }">
+          <transition 
+            name="fade-slide" 
+            mode="out-in"
+          >
+            <component :is="Component" :key="route.path" />
+          </transition>
+        </router-view>
       </main>
       <AppFooter />
     </template>
   </div>
 </template>
 
-<style scoped>
-#app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+<style>
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.4s ease;
 }
 
-.main-content {
-  flex: 1;
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
 }
 </style>

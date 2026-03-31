@@ -1,15 +1,133 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useProductStore } from '../stores/products'
 import ProductCard from '../components/product/ProductCard.vue'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import Lenis from 'lenis'
+
+gsap.registerPlugin(ScrollTrigger)
 
 const productStore = useProductStore()
 const email = ref('')
+let lenis = null
 
 onMounted(async () => {
-  await productStore.fetchFeaturedProducts()
-  await productStore.fetchCategories()
-  await productStore.fetchNewArrivals()
+  try {
+    await Promise.all([
+      productStore.fetchFeaturedProducts(),
+      productStore.fetchCategories(),
+      productStore.fetchNewArrivals()
+    ])
+  } catch (error) {
+    console.error('Initial fetch error:', error)
+  }
+
+  // Initialize Lenis
+  lenis = new Lenis({
+    duration: 1.2,
+    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    smoothWheel: true
+  })
+
+  lenis.on('scroll', ScrollTrigger.update)
+
+  gsap.ticker.add((time) => {
+    lenis.raf(time * 1000)
+  })
+
+  gsap.ticker.lagSmoothing(0)
+
+  await nextTick()
+
+  // Hero Animations
+  const tl = gsap.timeline()
+  tl.from('.hero-title span', {
+    y: 100,
+    opacity: 0,
+    duration: 1,
+    stagger: 0.2,
+    ease: 'power4.out'
+  })
+  .from('.hero-subtitle', {
+    y: 30,
+    opacity: 0,
+    duration: 0.8,
+    ease: 'power3.out'
+  }, '-=0.5')
+  .from('.hero-actions', {
+    y: 30,
+    opacity: 0,
+    duration: 0.8,
+    ease: 'power3.out'
+  }, '-=0.6')
+  .from('.hero-image-wrapper', {
+    scale: 0.8,
+    opacity: 0,
+    duration: 1.2,
+    ease: 'power4.out'
+  }, '-=1')
+
+  // Reveal Animations
+  const reveals = gsap.utils.toArray('.reveal')
+  reveals.forEach((el) => {
+    gsap.fromTo(el, 
+      { opacity: 0, y: 50 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 1.2,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 90%',
+          toggleActions: 'play none none none'
+        }
+      }
+    )
+  })
+
+  // Parallax Images
+  gsap.utils.toArray('.parallax-img').forEach((img) => {
+    gsap.to(img, {
+      yPercent: 20,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: img,
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: true
+      }
+    })
+  })
+
+  // Horizontal Marquee Animation
+  gsap.to('.marquee-content', {
+    xPercent: -50,
+    ease: 'none',
+    duration: 20,
+    repeat: -1
+  })
+
+  // Flagship Hover Animations
+  const cities = gsap.utils.toArray('.city-item')
+  cities.forEach(city => {
+    const img = city.querySelector('.city-img-popup')
+    city.addEventListener('mouseenter', () => {
+      gsap.to(img, { opacity: 1, scale: 1, y: -20, duration: 0.4, ease: 'back.out(1.7)' })
+    })
+    city.addEventListener('mouseleave', () => {
+      gsap.to(img, { opacity: 0, scale: 0.8, y: 0, duration: 0.3, ease: 'power2.in' })
+    })
+  })
+
+  ScrollTrigger.refresh()
+})
+
+onUnmounted(() => {
+  if (lenis) lenis.destroy()
+  ScrollTrigger.getAll().forEach(t => t.kill())
+  gsap.ticker.remove()
 })
 
 const subscribeNewsletter = () => {
@@ -19,899 +137,352 @@ const subscribeNewsletter = () => {
 </script>
 
 <template>
-  <div class="home">
+  <div class="home-modern bg-white">
     <!-- Hero Section -->
-    <section class="hero">
-      <div class="container">
-        <div class="hero-content">
-          <h1 class="hero-title">Step Into <span>Style</span></h1>
-          <p class="hero-subtitle">
-            Discover the perfect blend of comfort and fashion with our premium shoe collection.
-            From running to casual, we've got your feet covered.
-          </p>
-          <div class="hero-actions">
-            <router-link to="/products" class="btn btn-primary btn-lg">Shop Now</router-link>
-            <router-link to="/products" class="btn btn-outline btn-lg">View Collection</router-link>
+    <section class="relative min-h-screen flex items-center pt-20 overflow-hidden">
+      <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] select-none pointer-events-none">
+        <h2 class="text-[30vw] font-black uppercase tracking-tighter italic">KICKS</h2>
+      </div>
+
+      <div class="container relative z-10 grid lg:grid-cols-2 gap-20 items-center">
+        <div class="hero-text">
+          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-600 text-xs font-black uppercase tracking-widest mb-8">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            New S/S 2026 Collection
           </div>
-          <div class="hero-stats">
-            <div class="stat">
-              <span class="stat-number">500+</span>
-              <span class="stat-label">Products</span>
-            </div>
-            <div class="stat">
-              <span class="stat-number">50+</span>
-              <span class="stat-label">Brands</span>
-            </div>
-            <div class="stat">
-              <span class="stat-number">10K+</span>
-              <span class="stat-label">Customers</span>
-            </div>
+          <h1 class="hero-title text-8xl md:text-9xl font-black leading-[0.85] tracking-tighter text-black uppercase">
+            <span class="block overflow-hidden"><span class="block">Fast</span></span>
+            <span class="block overflow-hidden"><span class="block text-gray-200">Beyond</span></span>
+            <span class="block overflow-hidden"><span class="block">Limits</span></span>
+          </h1>
+          <p class="hero-subtitle mt-10 text-xl text-gray-500 leading-relaxed max-w-lg font-medium">
+            Discover the fusion of radical design and elite performance. Engineered for those who never stand still.
+          </p>
+          <div class="hero-actions mt-12 flex flex-wrap gap-6">
+            <router-link to="/products" class="group flex items-center gap-4 bg-black text-white px-10 py-5 rounded-full font-black uppercase tracking-widest hover:bg-blue-600 transition-all duration-500">
+              Shop Now
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </router-link>
+            <router-link to="/products" class="px-10 py-5 border-2 border-black text-black rounded-full font-black uppercase tracking-widest hover:bg-black hover:text-white transition-all duration-500">
+              Lookbook
+            </router-link>
           </div>
         </div>
-        <div class="hero-image">
-          <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&h=400&fit=crop" alt="Featured Shoe" />
+        
+        <div class="hero-image-wrapper relative">
+          <div class="absolute -top-20 -right-20 w-80 h-80 bg-blue-100 rounded-full blur-[100px] opacity-50"></div>
+          <div class="relative z-10 aspect-[4/5] overflow-hidden rounded-[3rem] shadow-2xl">
+            <img 
+              src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200&q=90" 
+              alt="Elite Shoe" 
+              class="w-full h-full object-cover"
+            />
+          </div>
+          <div class="absolute -bottom-10 -left-10 glass p-8 rounded-[2rem] shadow-2xl border border-white/50 hidden md:block">
+            <div class="flex gap-8">
+              <div>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Weight</p>
+                <p class="text-2xl font-black">180g</p>
+              </div>
+              <div class="w-px h-10 bg-gray-200"></div>
+              <div>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Support</p>
+                <p class="text-2xl font-black">Max</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Categories Section -->
-    <section class="categories">
+    <!-- 1. Cinematic Vision Section (New) -->
+    <section class="relative h-[80vh] flex items-center justify-center overflow-hidden bg-black mt-20">
+      <img src="https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=1600&q=90" class="absolute inset-0 w-full h-full object-cover opacity-60 parallax-img" alt="Cinematic" />
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black"></div>
+      <div class="container relative z-10 text-center">
+        <h2 class="reveal text-[12vw] font-black text-white leading-none uppercase tracking-tighter mix-blend-difference">A New<br/>Reality.</h2>
+        <button class="reveal mt-10 w-24 h-24 rounded-full border-2 border-white/30 flex items-center justify-center group hover:bg-white transition-all duration-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white group-hover:text-black" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- Marquee Section -->
+    <section class="py-12 bg-black overflow-hidden select-none">
+      <div class="marquee flex whitespace-nowrap">
+        <div class="marquee-content flex gap-20 py-4">
+          <span v-for="i in 10" :key="i" class="text-6xl font-black text-white/20 uppercase italic tracking-tighter">
+            * Performance Tech * Elite Style * Radical Design *
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Categories Modern -->
+    <section class="py-32 bg-gray-50">
       <div class="container">
-        <h2 class="section-title">Shop by Category</h2>
-        <p class="section-subtitle">Find the perfect shoes for every occasion</p>
-        <div class="categories-grid">
+        <div class="reveal flex flex-col items-center text-center mb-20">
+          <h2 class="text-6xl md:text-7xl font-black uppercase tracking-tighter">Collections</h2>
+          <div class="w-20 h-2 bg-black mt-6"></div>
+        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
           <router-link 
-            v-for="category in productStore.categories" 
+            v-for="(category, index) in productStore.categories.slice(0, 3)" 
             :key="category.id"
             :to="`/category/${category.slug}`"
-            class="category-card"
+            class="reveal group relative aspect-[3/4] rounded-[2.5rem] overflow-hidden shadow-xl bg-white"
           >
-            <div class="category-image">
-              <img :src="category.image || 'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=300&h=300&fit=crop'" :alt="category.name" />
-            </div>
-            <div class="category-info">
-              <h3>{{ category.name }}</h3>
-              <span class="category-count">{{ category.products_count }} Products</span>
+            <img :src="category.image || 'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=800&q=80'" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+            <div class="absolute inset-0 p-10 flex flex-col justify-end">
+              <span class="text-xs font-black text-blue-500 uppercase tracking-[0.3em] mb-4">Explore</span>
+              <h3 class="text-4xl font-black text-white uppercase tracking-tighter mb-2">{{ category.name }}</h3>
+              <p class="text-white/60 font-medium tracking-tight">Browse {{ category.products_count }} Products</p>
             </div>
           </router-link>
         </div>
       </div>
     </section>
 
-    <!-- Featured Products Section -->
-    <section class="featured">
+    <!-- 2. KICKS Studio / Customization (New) -->
+    <section class="py-32 bg-white relative overflow-hidden">
       <div class="container">
-        <div class="section-header">
-          <div>
-            <h2 class="section-title">Featured Products</h2>
-            <p class="section-subtitle">Our most popular picks for you</p>
-          </div>
-          <router-link to="/products" class="btn btn-outline">View All</router-link>
-        </div>
-        <div class="products-grid">
-          <ProductCard 
-            v-for="product in productStore.featuredProducts" 
-            :key="product.id" 
-            :product="product"
-          />
-        </div>
-      </div>
-    </section>
-
-    <!-- Promo Banner -->
-    <section class="promo-banner">
-      <div class="container">
-        <div class="promo-content">
-          <h2>Get 20% Off Your First Order</h2>
-          <p>Sign up today and receive exclusive discounts on your favorite shoes.</p>
-          <router-link to="/register" class="btn btn-primary btn-lg">Sign Up Now</router-link>
-        </div>
-      </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="features">
-      <div class="container">
-        <div class="features-grid">
-          <div class="feature-card">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="1" y="3" width="15" height="13"></rect>
-                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-                <circle cx="5.5" cy="18.5" r="2.5"></circle>
-                <circle cx="18.5" cy="18.5" r="2.5"></circle>
-              </svg>
+        <div class="reveal grid lg:grid-cols-2 gap-20 items-center">
+          <div class="order-2 lg:order-1 relative h-[600px] bg-gray-100 rounded-[4rem] p-12 flex items-center justify-center">
+            <!-- Floating Shoe Parts (Visual Metaphor) -->
+            <div class="absolute top-20 left-20 w-32 h-32 bg-white rounded-2xl shadow-xl rotate-12 flex items-center justify-center p-4">
+              <span class="text-[10px] font-black uppercase text-gray-400">Sole Tech</span>
             </div>
-            <h3>Free Shipping</h3>
-            <p>On orders over $100</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-              </svg>
+            <div class="absolute bottom-20 right-20 w-32 h-32 bg-white rounded-2xl shadow-xl -rotate-12 flex items-center justify-center p-4">
+              <span class="text-[10px] font-black uppercase text-gray-400">Fabric Lab</span>
             </div>
-            <h3>24/7 Support</h3>
-            <p>Round-the-clock assistance</p>
+            <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&q=90" class="relative z-10 w-full rounded-2xl rotate-[-15deg] drop-shadow-2xl" alt="Custom Shoe" />
           </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="23 4 23 10 17 10"></polyline>
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-              </svg>
-            </div>
-            <h3>Easy Returns</h3>
-            <p>30-day return policy</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-            </div>
-            <h3>Secure Payment</h3>
-            <p>100% secure checkout</p>
+          <div class="order-1 lg:order-2 reveal">
+            <span class="text-xs font-black text-blue-600 uppercase tracking-widest mb-4 block">KICKS Studio</span>
+            <h2 class="text-7xl font-black uppercase tracking-tighter mb-8 leading-none">Built by<br/><span class="text-gray-300">You.</span></h2>
+            <p class="text-xl text-gray-500 leading-relaxed mb-12 max-w-md">
+              The power of design is now in your hands. Choose your materials, select your palette, and engrave your legacy.
+            </p>
+            <button class="px-12 py-5 bg-black text-white rounded-full font-black uppercase tracking-widest hover:bg-blue-600 transition-all duration-500">
+              Start Designing
+            </button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- New Arrivals Section -->
-    <section class="new-arrivals">
+    <!-- The Archive Section -->
+    <section class="py-32 bg-gray-50 overflow-hidden">
       <div class="container">
-        <div class="section-header">
-          <div>
-            <h2 class="section-title">New Arrivals</h2>
-            <p class="section-subtitle">Check out our latest additions</p>
-          </div>
-          <router-link to="/products?sort=newest" class="btn btn-outline">View All</router-link>
-        </div>
-        <div class="products-grid">
-          <ProductCard 
-            v-for="product in productStore.newArrivals" 
-            :key="product.id" 
-            :product="product"
-          />
-        </div>
-      </div>
-    </section>
-
-    <!-- Testimonials Section -->
-    <section class="testimonials">
-      <div class="container">
-        <h2 class="section-title text-center">What Our Customers Say</h2>
-        <p class="section-subtitle text-center">Don't just take our word for it</p>
-        <div class="testimonials-grid">
-          <div class="testimonial-card">
-            <div class="testimonial-rating">
-              <span v-for="n in 5" :key="n">&#9733;</span>
-            </div>
-            <p class="testimonial-text">"Amazing quality shoes! The Nike Air Max I bought is so comfortable and looks exactly like the pictures. Fast shipping too!"</p>
-            <div class="testimonial-author">
-              <div class="author-avatar">JD</div>
-              <div class="author-info">
-                <strong>John Doe</strong>
-                <span>Verified Buyer</span>
-              </div>
-            </div>
-          </div>
-          <div class="testimonial-card">
-            <div class="testimonial-rating">
-              <span v-for="n in 5" :key="n">&#9733;</span>
-            </div>
-            <p class="testimonial-text">"Best shoe store online! Great prices, excellent customer service, and my order arrived faster than expected. Will definitely shop here again."</p>
-            <div class="testimonial-author">
-              <div class="author-avatar">SM</div>
-              <div class="author-info">
-                <strong>Sarah Miller</strong>
-                <span>Verified Buyer</span>
-              </div>
-            </div>
-          </div>
-          <div class="testimonial-card">
-            <div class="testimonial-rating">
-              <span v-for="n in 5" :key="n">&#9733;</span>
-            </div>
-            <p class="testimonial-text">"The variety of brands is incredible. Found my favorite Adidas shoes that were sold out everywhere else. Highly recommend!"</p>
-            <div class="testimonial-author">
-              <div class="author-avatar">MJ</div>
-              <div class="author-info">
-                <strong>Mike Johnson</strong>
-                <span>Verified Buyer</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Brands Section -->
-    <section class="brands">
-      <div class="container">
-        <h2 class="section-title text-center">Shop by Brand</h2>
-        <p class="section-subtitle text-center">We carry all the top brands</p>
-        <div class="brands-grid">
-          <div class="brand-card" v-for="brand in ['Nike', 'Adidas', 'New Balance', 'Puma', 'Vans', 'Converse', 'Asics', 'Jordan']" :key="brand">
-            <router-link :to="`/products?brand=${brand}`" class="brand-link">
-              <span class="brand-name">{{ brand }}</span>
+        <div class="grid lg:grid-cols-12 gap-10 items-center">
+          <div class="lg:col-span-5 reveal">
+            <span class="text-xs font-black text-gray-400 uppercase tracking-[0.4em] mb-4 block">Legacy</span>
+            <h2 class="text-6xl font-black uppercase tracking-tighter leading-none mb-8">The<br/><span class="text-gray-300 italic">Archive</span></h2>
+            <p class="text-lg text-gray-500 font-medium leading-relaxed mb-10">A curated journey through the silhouettes that defined generations.</p>
+            <router-link to="/products" class="inline-flex items-center gap-4 text-black font-black uppercase tracking-widest group">
+              Explore History <div class="w-12 h-px bg-black group-hover:w-20 transition-all duration-500"></div>
             </router-link>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Newsletter Section -->
-    <section class="newsletter">
-      <div class="container">
-        <div class="newsletter-content">
-          <div class="newsletter-text">
-            <h2>Join Our Newsletter</h2>
-            <p>Subscribe to get special offers, free giveaways, and exclusive deals.</p>
+          <div class="lg:col-span-7 grid grid-cols-2 gap-6 reveal">
+            <div class="aspect-[4/5] rounded-[2rem] overflow-hidden mt-20"><img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?w=800&q=80" class="w-full h-full object-cover parallax-img" /></div>
+            <div class="aspect-[4/5] rounded-[2rem] overflow-hidden"><img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800&q=80" class="w-full h-full object-cover parallax-img" /></div>
           </div>
-          <form class="newsletter-form" @submit.prevent="subscribeNewsletter">
-            <input type="email" v-model="email" placeholder="Enter your email" required />
-            <button type="submit" class="btn btn-primary">Subscribe</button>
-          </form>
         </div>
       </div>
     </section>
 
-    <!-- Instagram Feed Section -->
-    <section class="instagram">
+    <!-- Innovation Section -->
+    <section class="py-32 bg-white relative">
+      <div class="container grid lg:grid-cols-2 gap-20 items-center">
+        <div class="reveal">
+          <h2 class="text-5xl md:text-6xl font-black uppercase tracking-tighter mb-10 leading-none">Radical<br/><span class="text-blue-600">Innovation.</span></h2>
+          <div class="space-y-12">
+            <div v-for="(tech, i) in ['Carbon Fiber Core', 'Reactive Foam', 'Breathable Mesh']" :key="i" class="flex gap-8 group">
+              <div class="text-5xl font-black text-gray-200 group-hover:text-blue-200 transition-colors">0{{i+1}}</div>
+              <div>
+                <h4 class="text-xl font-black uppercase mb-2">{{ tech }}</h4>
+                <p class="text-gray-500 leading-relaxed">Providing unparalleled energy return and stabilization for your most intense runs.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="reveal relative"><img src="https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=1000&q=80" class="w-full rounded-[3rem] shadow-2xl" /></div>
+      </div>
+    </section>
+
+    <!-- 3. Global Flagships (New) -->
+    <section class="py-32 bg-black text-white">
       <div class="container">
-        <h2 class="section-title text-center">Follow Us on Instagram</h2>
-        <p class="section-subtitle text-center">@shoestore for daily inspiration</p>
-        <div class="instagram-grid">
-          <div class="instagram-item" v-for="n in 6" :key="n">
-            <img :src="`https://images.unsplash.com/photo-${1542291026789 + n * 10000}?w=300&h=300&fit=crop`" alt="Instagram post" />
-            <div class="instagram-overlay">
-              <svg viewBox="0 0 24 24" fill="white" width="24" height="24">
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-              </svg>
+        <div class="reveal flex flex-col items-center text-center mb-24">
+          <span class="text-blue-500 font-black uppercase tracking-widest text-xs mb-4">Global Reach</span>
+          <h2 class="text-7xl font-black uppercase tracking-tighter">Flagship Spaces.</h2>
+        </div>
+        <div class="space-y-4">
+          <div v-for="(city, i) in [
+            { name: 'Tokyo', area: 'Shibuya', img: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=400' },
+            { name: 'Paris', area: 'Le Marais', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400' },
+            { name: 'New York', area: 'SoHo', img: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400' },
+            { name: 'London', area: 'Shoreditch', img: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400' }
+          ]" :key="i" class="reveal city-item relative border-b border-white/10 py-10 group cursor-pointer">
+            <div class="flex items-end justify-between relative z-10">
+              <div class="flex items-center gap-10">
+                <span class="text-xl font-black text-white/20">0{{i+1}}</span>
+                <h3 class="text-6xl md:text-8xl font-black uppercase tracking-tighter group-hover:text-blue-500 transition-colors duration-500">{{ city.name }}</h3>
+              </div>
+              <p class="text-xl font-medium text-white/40 group-hover:text-white transition-colors">{{ city.area }}</p>
+            </div>
+            <!-- Dynamic Image Popup -->
+            <div class="city-img-popup absolute left-[40%] top-0 w-64 h-80 pointer-events-none opacity-0 scale-80 overflow-hidden rounded-3xl shadow-2xl z-20">
+              <img :src="city.img" class="w-full h-full object-cover" />
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Why Choose Us Section -->
-    <section class="why-choose-us">
+    <!-- Eco-Impact Section -->
+    <section class="py-32 bg-green-50 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-[50%] h-full bg-green-100 -skew-x-12 translate-x-1/4"></div>
+      <div class="container relative z-10 grid lg:grid-cols-2 gap-20 items-center">
+        <div class="reveal order-2 lg:order-1">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="p-8 bg-white rounded-3xl shadow-sm"><p class="text-4xl font-black text-green-600 mb-2">98%</p><p class="text-xs font-bold uppercase tracking-widest text-gray-400">Recycled Polyester</p></div>
+            <div class="p-8 bg-white rounded-3xl shadow-sm mt-8"><p class="text-4xl font-black text-green-600 mb-2">0</p><p class="text-xs font-bold uppercase tracking-widest text-gray-400">Waste Policy</p></div>
+          </div>
+        </div>
+        <div class="reveal order-1 lg:order-2">
+          <span class="text-xs font-black text-green-600 uppercase tracking-widest mb-4 block">Sustainability</span>
+          <h2 class="text-6xl font-black uppercase tracking-tighter mb-8">Green by Design.</h2>
+          <button class="btn bg-green-600 text-white px-10">Read Our Impact Report</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trending Products -->
+    <section class="py-32 bg-black text-white overflow-hidden">
       <div class="container">
-        <h2 class="section-title text-center">Why Choose ShoeStore?</h2>
-        <p class="section-subtitle text-center">We're committed to providing the best shopping experience</p>
-        <div class="why-grid">
-          <div class="why-card">
-            <div class="why-number">01</div>
-            <h3>Authentic Products</h3>
-            <p>100% genuine products sourced directly from authorized distributors. No fakes, no imitations.</p>
+        <div class="reveal flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
+          <div><span class="text-blue-500 font-black uppercase tracking-widest text-xs">Trending Now</span><h2 class="text-6xl font-black uppercase tracking-tighter mt-4">The Heat List.</h2></div>
+          <router-link to="/products" class="text-white font-black uppercase tracking-widest text-sm underline underline-offset-8 hover:text-blue-500 transition-colors">View All Drops</router-link>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+          <div v-for="(product, index) in productStore.featuredProducts" :key="product.id" class="reveal"><ProductCard :product="product" /></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Street Culture Mosaic -->
+    <section class="py-32 bg-white">
+      <div class="container">
+        <div class="reveal text-center mb-20">
+          <h2 class="text-6xl font-black uppercase tracking-tighter">Street Culture.</h2>
+          <p class="text-gray-400 font-bold tracking-widest uppercase text-xs mt-4">#KICKSWORLDWIDE ON INSTAGRAM</p>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 h-[800px]">
+          <div class="reveal col-span-2 row-span-2 rounded-[2rem] overflow-hidden"><img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?w=1000&q=80" class="w-full h-full object-cover" /></div>
+          <div class="reveal rounded-[2rem] overflow-hidden"><img src="https://images.unsplash.com/photo-1514989940723-e8e51635b782?w=600&q=80" class="w-full h-full object-cover" /></div>
+          <div class="reveal rounded-[2rem] overflow-hidden"><img src="https://images.unsplash.com/photo-1584735175315-9d5df23860e6?w=600&q=80" class="w-full h-full object-cover" /></div>
+          <div class="reveal col-span-2 rounded-[2rem] overflow-hidden"><img src="https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=1000&q=80" class="w-full h-full object-cover" /></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- KICKS+ App Section -->
+    <section class="py-32 bg-black overflow-hidden relative">
+      <div class="absolute -right-20 top-0 w-[60vw] h-full bg-blue-600 rounded-l-[10rem] opacity-20"></div>
+      <div class="container relative z-10 grid lg:grid-cols-2 gap-20 items-center">
+        <div class="reveal">
+          <span class="text-xs font-black text-blue-500 uppercase tracking-widest mb-4 block">Tech Ecosystem</span>
+          <h2 class="text-7xl font-black text-white uppercase tracking-tighter mb-8 leading-none">Your Phone,<br/>Our <span class="italic text-gray-500">Soul.</span></h2>
+          <div class="flex flex-wrap gap-4">
+            <button class="bg-white text-black px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-3">App Store</button>
+            <button class="bg-gray-900 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-3 border border-gray-800">Google Play</button>
           </div>
-          <div class="why-card">
-            <div class="why-number">02</div>
-            <h3>Best Prices</h3>
-            <p>We offer competitive prices and regular sales. Price match guarantee on all products.</p>
-          </div>
-          <div class="why-card">
-            <div class="why-number">03</div>
-            <h3>Expert Advice</h3>
-            <p>Our team of sneaker enthusiasts is always ready to help you find the perfect pair.</p>
-          </div>
-          <div class="why-card">
-            <div class="why-number">04</div>
-            <h3>Fast Delivery</h3>
-            <p>Same-day processing and express shipping options available. Track your order in real-time.</p>
+        </div>
+        <div class="reveal flex justify-center"><div class="relative w-72 h-[600px] bg-black border-[12px] border-gray-900 rounded-[3.5rem] shadow-2xl overflow-hidden"><img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80" class="w-full h-full object-cover opacity-80" /></div></div>
+      </div>
+    </section>
+
+    <!-- Membership Section -->
+    <section class="py-32 bg-white">
+      <div class="container">
+        <div class="reveal bg-gray-900 rounded-[4rem] p-12 md:p-24 relative overflow-hidden">
+          <div class="absolute -right-20 -top-20 w-80 h-80 bg-blue-600 rounded-full blur-[100px] opacity-20"></div>
+          <div class="grid lg:grid-cols-2 gap-20 items-center">
+            <div>
+              <h2 class="text-6xl font-black text-white uppercase tracking-tighter mb-8">Join the<br/><span class="text-blue-500">Elite.</span></h2>
+              <button class="mt-12 px-12 py-5 bg-white text-black rounded-full font-black uppercase tracking-widest hover:bg-blue-600 transition-all">Become a Member</button>
+            </div>
+            <div class="relative"><div class="glass p-10 rounded-[3rem] border border-white/10 text-white transform rotate-3"><p class="text-3xl font-black tracking-[0.2em] mb-4 text-white/90">0000 0000 0000 0000</p></div></div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- FAQ Section -->
-    <section class="faq">
+    <!-- Testimonial Section -->
+    <section class="py-32 bg-gray-50">
       <div class="container">
-        <h2 class="section-title text-center">Frequently Asked Questions</h2>
-        <p class="section-subtitle text-center">Got questions? We've got answers</p>
-        <div class="faq-grid">
-          <div class="faq-item">
-            <h4>How long does shipping take?</h4>
-            <p>Standard shipping takes 3-5 business days. Express shipping is available for 1-2 day delivery.</p>
-          </div>
-          <div class="faq-item">
-            <h4>What is your return policy?</h4>
-            <p>We offer a 30-day return policy for unworn items in original packaging. Free returns on all orders.</p>
-          </div>
-          <div class="faq-item">
-            <h4>Are the shoes authentic?</h4>
-            <p>Yes! All our products are 100% authentic and sourced from authorized retailers.</p>
-          </div>
-          <div class="faq-item">
-            <h4>How do I track my order?</h4>
-            <p>Once shipped, you'll receive an email with tracking information. You can also track in your account.</p>
-          </div>
+        <div class="reveal text-center max-w-4xl mx-auto">
+          <svg class="w-16 h-16 text-blue-500 mx-auto mb-10" fill="currentColor" viewBox="0 0 32 32"><path d="M10 8v8h6v8h-8v-16h2zM22 8v8h6v8h-8v-16h2z" /></svg>
+          <p class="text-3xl md:text-5xl font-black tracking-tighter leading-tight text-black">"These are the most comfortable and stylish shoes I've ever owned."</p>
+          <div class="mt-12"><p class="text-lg font-black uppercase tracking-widest">Marcus Thompson</p></div>
         </div>
       </div>
     </section>
 
+    <!-- Newsletter Modern -->
+    <section class="py-32 container">
+      <div class="reveal relative bg-black rounded-[4rem] p-12 md:p-32 text-center overflow-hidden shadow-2xl border border-white/5">
+        <!-- Abstract Shapes for Black Theme -->
+        <div class="absolute -top-20 -left-20 w-96 h-96 bg-blue-600/20 rounded-full blur-[120px]"></div>
+        <div class="absolute -bottom-20 -right-20 w-96 h-96 bg-purple-600/10 rounded-full blur-[120px]"></div>
+
+        <div class="relative z-10 max-w-3xl mx-auto">
+          <h2 class="text-5xl md:text-7xl font-black text-white tracking-tighter leading-[0.9] uppercase">Don't miss<br/>the next drop.</h2>
+          <p class="mt-8 text-xl text-gray-400 font-medium">Join 50k+ enthusiasts and get early access to exclusive releases.</p>
+          
+          <form @submit.prevent="subscribeNewsletter" class="mt-12 flex flex-col sm:flex-row gap-4 p-2 bg-white/5 border border-white/10 rounded-[2.5rem] backdrop-blur-md">
+            <input 
+              v-model="email" 
+              type="email" 
+              placeholder="YOUR@EMAIL.COM" 
+              class="flex-1 bg-transparent px-8 py-5 text-white font-black uppercase tracking-widest focus:outline-none placeholder:text-gray-600"
+              required
+            />
+            <button type="submit" class="bg-white text-black hover:bg-blue-600 hover:text-white px-12 py-5 rounded-[2rem] font-black uppercase tracking-widest transition-all duration-500">
+              Join Now
+            </button>
+          </form>
+          <p class="mt-8 text-xs text-gray-500 font-black uppercase tracking-widest">Safe & Secure. No Spam Ever.</p>
+        </div>
       </div>
+    </section>
+  </div>
 </template>
 
 <style scoped>
-.hero {
-  background: linear-gradient(135deg, var(--gray-100) 0%, white 100%);
-  padding: 4rem 0;
-}
-
-.hero .container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4rem;
-  align-items: center;
-}
-
-.hero-title {
-  font-size: 3.5rem;
-  font-weight: 800;
-  line-height: 1.1;
-  color: var(--gray-900);
-  margin-bottom: 1.5rem;
-}
-
 .hero-title span {
-  color: var(--primary);
+  display: inline-block;
 }
 
-.hero-subtitle {
-  font-size: 1.25rem;
-  color: var(--gray-600);
-  margin-bottom: 2rem;
-  max-width: 500px;
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
-.hero-actions {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 3rem;
+.marquee-content span {
+  -webkit-text-stroke: 1px rgba(255,255,255,0.2);
+  color: transparent;
 }
 
-.hero-stats {
-  display: flex;
-  gap: 3rem;
+.city-img-popup {
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-
-.stat {
-  display: flex;
-  flex-direction: column;
-}
-
-.stat-number {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--gray-900);
-}
-
-.stat-label {
-  color: var(--gray-500);
-  font-size: 0.875rem;
-}
-
-.hero-image {
-  position: relative;
-}
-
-.hero-image img {
-  border-radius: 2rem;
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-  transform: rotate(-5deg);
-  transition: transform 0.3s;
-}
-
-.hero-image:hover img {
-  transform: rotate(0deg);
-}
-
-.categories,
-.featured,
-.features {
-  padding: 5rem 0;
-}
-
-.section-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--gray-900);
-  margin-bottom: 0.5rem;
-}
-
-.section-subtitle {
-  color: var(--gray-500);
-  margin-bottom: 2rem;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 2rem;
-}
-
-.categories-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
-}
-
-.category-card {
-  background: white;
-  border-radius: 1rem;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.category-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-}
-
-.category-image {
-  height: 200px;
-  overflow: hidden;
-}
-
-.category-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s;
-}
-
-.category-card:hover .category-image img {
-  transform: scale(1.1);
-}
-
-.category-info {
-  padding: 1.5rem;
-  text-align: center;
-}
-
-.category-info h3 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.category-count {
-  color: var(--gray-500);
-  font-size: 0.875rem;
-}
-
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
-}
-
-.promo-banner {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  padding: 4rem 0;
-  margin: 4rem 0;
-}
-
-.promo-content {
-  text-align: center;
-  color: white;
-}
-
-.promo-content h2 {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-}
-
-.promo-content p {
-  font-size: 1.125rem;
-  opacity: 0.9;
-  margin-bottom: 2rem;
-}
-
-.promo-content .btn {
-  background: white;
-  color: var(--primary);
-}
-
-.promo-content .btn:hover {
-  background: var(--gray-100);
-}
-
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 2rem;
-}
-
-.feature-card {
-  text-align: center;
-  padding: 2rem;
-}
-
-.feature-icon {
-  width: 60px;
-  height: 60px;
-  margin: 0 auto 1rem;
-  background: rgba(37, 99, 235, 0.1);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.feature-icon svg {
-  width: 28px;
-  height: 28px;
-  color: var(--primary);
-}
-
-.feature-card h3 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.feature-card p {
-  color: var(--gray-500);
-  font-size: 0.875rem;
-}
-
-@media (max-width: 1024px) {
-  .hero .container {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-  
-  .hero-subtitle {
-    margin: 0 auto 2rem;
-  }
-  
-  .hero-actions {
-    justify-content: center;
-  }
-  
-  .hero-stats {
-    justify-content: center;
-  }
-  
-  .hero-image {
-    display: none;
-  }
-  
-  .categories-grid,
-  .products-grid,
-  .features-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
-  .hero-title {
-    font-size: 2.5rem;
-  }
-  
-  .hero-actions {
-    flex-direction: column;
-  }
-  
-  .categories-grid,
-  .products-grid,
-  .features-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .section-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-}
-
-/* New Arrivals Section */
-.new-arrivals {
-  padding: 5rem 0;
-  background: var(--gray-50);
-}
-
-/* Testimonials Section */
-.testimonials {
-  padding: 5rem 0;
-  background: white;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.testimonials-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
-  margin-top: 3rem;
-}
-
-.testimonial-card {
-  background: var(--gray-50);
-  padding: 2rem;
-  border-radius: 1rem;
-}
-
-.testimonial-rating {
-  color: #fbbf24;
-  font-size: 1.25rem;
-  margin-bottom: 1rem;
-}
-
-.testimonial-text {
-  color: var(--gray-700);
-  font-size: 1rem;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
-  font-style: italic;
-}
-
-.testimonial-author {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.author-avatar {
-  width: 50px;
-  height: 50px;
-  background: var(--primary);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-}
-
-.author-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.author-info strong {
-  color: var(--gray-900);
-}
-
-.author-info span {
-  color: var(--gray-500);
-  font-size: 0.875rem;
-}
-
-/* Brands Section */
-.brands {
-  padding: 5rem 0;
-  background: var(--gray-50);
-}
-
-.brands-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
-  margin-top: 3rem;
-}
-
-.brand-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 1rem;
-  text-align: center;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.brand-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-}
-
-.brand-link {
-  text-decoration: none;
-  color: inherit;
-}
-
-.brand-name {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--gray-800);
-}
-
-/* Newsletter Section */
-.newsletter {
-  padding: 5rem 0;
-  background: linear-gradient(135deg, var(--gray-900) 0%, var(--gray-800) 100%);
-}
-
-.newsletter-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 3rem;
-}
-
-.newsletter-text h2 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: white;
-  margin-bottom: 0.5rem;
-}
-
-.newsletter-text p {
-  color: var(--gray-400);
-  font-size: 1.125rem;
-}
-
-.newsletter-form {
-  display: flex;
-  gap: 1rem;
-  flex: 1;
-  max-width: 500px;
-}
-
-.newsletter-form input {
-  flex: 1;
-  padding: 1rem 1.5rem;
-  border-radius: 0.5rem;
-  border: none;
-  font-size: 1rem;
-}
-
-.newsletter-form .btn {
-  padding: 1rem 2rem;
-  white-space: nowrap;
-}
-
-@media (max-width: 768px) {
-  .testimonials-grid,
-  .brands-grid,
-  .why-grid,
-  .faq-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .newsletter-content {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .newsletter-form {
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .instagram-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-/* Instagram Section */
-.instagram {
-  padding: 5rem 0;
-  background: white;
-}
-
-.instagram-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 1rem;
-  margin-top: 3rem;
-}
-
-.instagram-item {
-  position: relative;
-  aspect-ratio: 1;
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
-
-.instagram-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s;
-}
-
-.instagram-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.instagram-item:hover img {
-  transform: scale(1.1);
-}
-
-.instagram-item:hover .instagram-overlay {
-  opacity: 1;
-}
-
-/* Why Choose Us Section */
-.why-choose-us {
-  padding: 5rem 0;
-  background: var(--gray-50);
-}
-
-.why-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 2rem;
-  margin-top: 3rem;
-}
-
-.why-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 1rem;
-  text-align: center;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.why-number {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: var(--primary);
-  opacity: 0.3;
-  margin-bottom: 1rem;
-}
-
-.why-card h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--gray-900);
-  margin-bottom: 0.75rem;
-}
-
-.why-card p {
-  color: var(--gray-600);
-  font-size: 0.95rem;
-  line-height: 1.6;
-}
-
-/* FAQ Section */
-.faq {
-  padding: 5rem 0;
-  background: white;
-}
-
-.faq-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
-  margin-top: 3rem;
-}
-
-.faq-item {
-  background: var(--gray-50);
-  padding: 2rem;
-  border-radius: 1rem;
-}
-
-.faq-item h4 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--gray-900);
-  margin-bottom: 0.75rem;
-}
-
-.faq-item p {
-  color: var(--gray-600);
-  line-height: 1.6;
-}
-
-
 </style>

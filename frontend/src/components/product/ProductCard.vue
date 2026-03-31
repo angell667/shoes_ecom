@@ -21,9 +21,8 @@ const addToCart = async () => {
   }
   try {
     await cartStore.addToCart(props.product.id, 1)
-    alert('Added to cart!')
   } catch (error) {
-    alert(error.message || 'Failed to add to cart')
+    console.error('Failed to add to cart:', error)
   }
 }
 
@@ -36,190 +35,69 @@ const formatPrice = (price) => {
 </script>
 
 <template>
-  <div class="product-card">
-    <router-link :to="`/products/${product.slug}`" class="product-image">
-      <img :src="product.image || 'https://via.placeholder.com/300x300?text=No+Image'" :alt="product.name" />
-      <div class="product-badges">
-        <span v-if="product.is_featured" class="badge badge-featured">Featured</span>
-        <span v-if="product.sale_price" class="badge badge-sale">
+  <div class="group relative flex flex-col bg-white rounded-[2rem] overflow-hidden transition-all duration-500 hover:shadow-2xl border border-gray-100">
+    <!-- Image Area -->
+    <div class="relative aspect-square overflow-hidden bg-gray-50">
+      <router-link :to="`/products/${product.slug}`" class="block w-full h-full">
+        <img 
+          :src="product.image || 'https://via.placeholder.com/600x600?text=No+Image'" 
+          :alt="product.name"
+          class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        />
+      </router-link>
+      
+      <!-- Badges -->
+      <div class="absolute top-6 left-6 flex flex-col gap-2 pointer-events-none">
+        <span v-if="product.sale_price" class="px-4 py-1.5 bg-red-600 text-white text-xs font-black uppercase tracking-widest rounded-full">
           -{{ product.discount_percentage }}%
         </span>
+        <span v-if="product.is_featured" class="px-4 py-1.5 bg-black text-white text-xs font-black uppercase tracking-widest rounded-full">
+          Hot
+        </span>
       </div>
-      <button class="quick-add" @click.prevent="addToCart">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="9" cy="21" r="1"/>
-          <circle cx="20" cy="21" r="1"/>
-          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-        </svg>
-        Add to Cart
-      </button>
-    </router-link>
-    <div class="product-info">
-      <span class="product-category">{{ product.category?.name }}</span>
-      <router-link :to="`/products/${product.slug}`" class="product-name">
+
+      <!-- Quick Actions -->
+      <div class="absolute inset-x-6 bottom-6 translate-y-20 group-hover:translate-y-0 transition-transform duration-500 ease-out flex gap-2">
+        <button 
+          @click.prevent="addToCart"
+          class="flex-1 bg-black text-white py-4 rounded-2xl font-bold text-sm uppercase tracking-wider hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add to Cart
+        </button>
+      </div>
+    </div>
+
+    <!-- Info Area -->
+    <div class="p-8 flex-1 flex flex-col">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{{ product.brand || 'Original' }}</span>
+        <div class="flex gap-1">
+          <div v-for="i in 5" :key="i" class="w-1.5 h-1.5 rounded-full bg-gray-200"></div>
+        </div>
+      </div>
+      
+      <router-link 
+        :to="`/products/${product.slug}`" 
+        class="text-xl font-bold text-black group-hover:text-blue-600 transition-colors line-clamp-1 leading-tight mb-4"
+      >
         {{ product.name }}
       </router-link>
-      <div class="product-brand" v-if="product.brand">{{ product.brand }}</div>
-      <div class="product-price">
-        <span class="price-current">{{ formatPrice(product.effective_price) }}</span>
-        <span v-if="product.sale_price" class="price-old">{{ formatPrice(product.price) }}</span>
-      </div>
-      <div v-if="product.stock < 10 && product.stock > 0" class="stock-warning">
-        Only {{ product.stock }} left!
-      </div>
-      <div v-else-if="product.stock === 0" class="stock-out">
-        Out of Stock
+
+      <div class="mt-auto flex items-center justify-between">
+        <div class="flex flex-col">
+          <span v-if="product.sale_price" class="text-xs text-gray-400 line-through font-medium">{{ formatPrice(product.price) }}</span>
+          <span class="text-2xl font-black text-black tracking-tighter">{{ formatPrice(product.effective_price) }}</span>
+        </div>
+        
+        <div class="h-10 w-10 rounded-full border border-gray-100 flex items-center justify-center group-hover:bg-black group-hover:text-white transition-all duration-300">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </div>
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.product-card {
-  background: white;
-  border-radius: 1rem;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-}
-
-.product-image {
-  position: relative;
-  display: block;
-  height: 250px;
-  overflow: hidden;
-  background: var(--gray-100);
-}
-
-.product-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s;
-}
-
-.product-card:hover .product-image img {
-  transform: scale(1.1);
-}
-
-.product-badges {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.badge-featured {
-  background: var(--primary);
-  color: white;
-}
-
-.badge-sale {
-  background: var(--danger);
-  color: white;
-}
-
-.quick-add {
-  position: absolute;
-  bottom: -50px;
-  left: 1rem;
-  right: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: bottom 0.3s, background 0.2s;
-}
-
-.quick-add:hover {
-  background: var(--primary-dark);
-}
-
-.product-card:hover .quick-add {
-  bottom: 1rem;
-}
-
-.quick-add svg {
-  width: 18px;
-  height: 18px;
-}
-
-.product-info {
-  padding: 1.25rem;
-}
-
-.product-category {
-  display: block;
-  font-size: 0.75rem;
-  color: var(--gray-500);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 0.5rem;
-}
-
-.product-name {
-  display: block;
-  font-weight: 600;
-  font-size: 1rem;
-  color: var(--gray-800);
-  margin-bottom: 0.25rem;
-  line-height: 1.4;
-  transition: color 0.2s;
-}
-
-.product-name:hover {
-  color: var(--primary);
-}
-
-.product-brand {
-  font-size: 0.875rem;
-  color: var(--gray-500);
-  margin-bottom: 0.75rem;
-}
-
-.product-price {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.price-current {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--gray-900);
-}
-
-.price-old {
-  font-size: 0.875rem;
-  color: var(--gray-400);
-  text-decoration: line-through;
-}
-
-.stock-warning {
-  margin-top: 0.5rem;
-  font-size: 0.75rem;
-  color: var(--warning);
-  font-weight: 500;
-}
-
-.stock-out {
-  margin-top: 0.5rem;
-  font-size: 0.75rem;
-  color: var(--danger);
-  font-weight: 500;
-}
-</style>

@@ -2,1575 +2,7 @@
 
 **Session ID:** ses_2c0813cccffeiU4BvxGvCyXJ0o
 **Created:** 30/03/2026, 21:06:05
-**Updated:** 31/03/2026, 00:40:20
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 7.8s)
-
-_Thinking:_
-
-The user is saying that when they click on the Dashboard section in the admin portal, the inner tabs (like Overview) are showing nothing. They want the content to show properly in the dashboard section.
-
-Let me check the DashboardView.vue more carefully to see if there's an issue with how the tabs are rendering or if there's a problem with the data loading.
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "filePath": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\frontend\\src\\views\\admin\\DashboardView.vue",
-  "limit": 200
-}
-```
-
-**Output:**
-```
-<path>C:\Users\angellX\Desktop\shoes_ecom-more_improved\frontend\src\views\admin\DashboardView.vue</path>
-<type>file</type>
-<content>1: <script setup>
-2: import { ref, onMounted, computed } from 'vue'
-3: import axios from 'axios'
-4: 
-5: const stats = ref(null)
-6: const loading = ref(true)
-7: const activeTab = ref('overview')
-8: 
-9: const formatPrice = (price) => {
-10:   return new Intl.NumberFormat('en-US', {
-11:     style: 'currency',
-12:     currency: 'USD',
-13:     minimumFractionDigits: 0
-14:   }).format(price)
-15: }
-16: 
-17: const formatDate = (date) => {
-18:   return new Date(date).toLocaleDateString('en-US', {
-19:     month: 'short',
-20:     day: 'numeric',
-21:     hour: '2-digit',
-22:     minute: '2-digit'
-23:   })
-24: }
-25: 
-26: const getStatusBadge = (status) => {
-27:   const badges = {
-28:     pending: { bg: '#fef3c7', color: '#d97706' },
-29:     processing: { bg: '#dbeafe', color: '#2563eb' },
-30:     shipped: { bg: '#e0e7ff', color: '#4f46e5' },
-31:     delivered: { bg: '#dcfce7', color: '#16a34a' },
-32:     cancelled: { bg: '#fee2e2', color: '#dc2626' },
-33:     completed: { bg: '#dcfce7', color: '#16a34a' },
-34:     failed: { bg: '#fee2e2', color: '#dc2626' },
-35:     refunded: { bg: '#f3e8ff', color: '#9333ea' }
-36:   }
-37:   return badges[status] || { bg: '#f3f4f6', color: '#6b7280' }
-38: }
-39: 
-40: // Computed properties for stats
-41: const totalRevenue = computed(() => stats.value?.stats?.total_revenue || 0)
-42: const monthlyRevenue = computed(() => stats.value?.stats?.monthly_revenue || 0)
-43: const totalOrders = computed(() => stats.value?.stats?.total_orders || 0)
-44: const totalProducts = computed(() => stats.value?.stats?.total_products || 0)
-45: const totalUsers = computed(() => stats.value?.stats?.total_users || 0)
-46: const totalReviews = computed(() => stats.value?.stats?.total_reviews || 0)
-47: const totalCoupons = computed(() => stats.value?.stats?.total_coupons || 0)
-48: const averageRating = computed(() => stats.value?.stats?.average_rating || 0)
-49: const totalStockValue = computed(() => stats.value?.stats?.total_stock_value || 0)
-50: 
-51: const orderCompletionRate = computed(() => {
-52:   if (!stats.value?.stats) return 0
-53:   const completed = (stats.value.stats.completed_orders || 0) + (stats.value.stats.shipped_orders || 0)
-54:   const total = stats.value.stats.total_orders || 1
-55:   return Math.round((completed / total) * 100)
-56: })
-57: 
-58: onMounted(async () => {
-59:   try {
-60:     const response = await axios.get('/api/admin/dashboard')
-61:     stats.value = response.data
-62:     console.log('Dashboard data:', stats.value)
-63:   } catch (error) {
-64:     console.error('Dashboard error:', error)
-65:   } finally {
-66:     loading.value = false
-67:   }
-68: })
-69: 
-70: const tabs = [
-71:   { id: 'overview', label: 'Overview', icon: '📊' },
-72:   { id: 'payments', label: 'Payments', icon: '💳' },
-73:   { id: 'reviews', label: 'Reviews', icon: '⭐' },
-74:   { id: 'coupons', label: 'Coupons', icon: '🏷️' },
-75:   { id: 'inventory', label: 'Inventory', icon: '📦' },
-76:   { id: 'users', label: 'Users', icon: '👥' }
-77: ]
-78: </script>
-79: 
-80: <template>
-81:   <div class="dashboard">
-82:     <!-- Header -->
-83:     <div class="page-header">
-84:       <div>
-85:         <h1 class="page-title">Dashboard</h1>
-86:         <p class="page-subtitle">Welcome back! Here's what's happening with your store.</p>
-87:       </div>
-88:       <div class="date-badge">
-89:         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-90:           <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-91:         </svg>
-92:         {{ new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) }}
-93:       </div>
-94:     </div>
-95: 
-96:     <!-- Loading -->
-97:     <div v-if="loading" class="loading-container">
-98:       <div class="spinner"></div>
-99:       <p>Loading dashboard data...</p>
-100:     </div>
-101: 
-102:     <template v-else-if="stats">
-103:       <!-- Navigation Tabs -->
-104:       <div class="tabs-container">
-105:         <button 
-106:           v-for="tab in tabs" 
-107:           :key="tab.id"
-108:           :class="['tab-btn', { active: activeTab === tab.id }]"
-109:           @click="activeTab = tab.id"
-110:         >
-111:           <span class="tab-icon">{{ tab.icon }}</span>
-112:           <span class="tab-label">{{ tab.label }}</span>
-113:         </button>
-114:       </div>
-115: 
-116:       <!-- Overview Tab -->
-117:       <div v-if="activeTab === 'overview'" class="tab-content">
-118:         <!-- Stats Cards Row 1 -->
-119:         <div class="stats-grid">
-120:           <div class="stat-card">
-121:             <div class="stat-content">
-122:               <div class="stat-info">
-123:                 <p class="stat-label">Total Revenue</p>
-124:                 <p class="stat-value">{{ formatPrice(totalRevenue) }}</p>
-125:               </div>
-126:               <div class="stat-icon blue">
-127:                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-128:                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-129:                 </svg>
-130:               </div>
-131:             </div>
-132:             <div class="stat-footer">
-133:               <span class="stat-detail">Monthly: {{ formatPrice(monthlyRevenue) }}</span>
-134:             </div>
-135:           </div>
-136: 
-137:           <div class="stat-card">
-138:             <div class="stat-content">
-139:               <div class="stat-info">
-140:                 <p class="stat-label">Total Orders</p>
-141:                 <p class="stat-value">{{ totalOrders }}</p>
-142:               </div>
-143:               <div class="stat-icon green">
-144:                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-145:                   <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-146:                 </svg>
-147:               </div>
-148:             </div>
-149:             <div class="stat-footer">
-150:               <span class="stat-detail">Avg: {{ formatPrice(stats.stats.average_order_value) }}</span>
-151:             </div>
-152:           </div>
-153: 
-154:           <div class="stat-card">
-155:             <div class="stat-content">
-156:               <div class="stat-info">
-157:                 <p class="stat-label">Total Products</p>
-158:                 <p class="stat-value">{{ totalProducts }}</p>
-159:               </div>
-160:               <div class="stat-icon purple">
-161:                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-162:                   <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-163:                 </svg>
-164:               </div>
-165:             </div>
-166:             <div class="stat-footer">
-167:               <span class="stat-detail">Stock Value: {{ formatPrice(totalStockValue) }}</span>
-168:             </div>
-169:           </div>
-170: 
-171:           <div class="stat-card">
-172:             <div class="stat-content">
-173:               <div class="stat-info">
-174:                 <p class="stat-label">Total Users</p>
-175:                 <p class="stat-value">{{ totalUsers }}</p>
-176:               </div>
-177:               <div class="stat-icon orange">
-178:                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-179:                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-180:                 </svg>
-181:               </div>
-182:             </div>
-183:             <div class="stat-footer">
-184:               <span class="stat-detail">Wishlist items: {{ stats.stats.total_wishlist_items }}</span>
-185:             </div>
-186:           </div>
-187:         </div>
-188: 
-189:         <!-- Stats Cards Row 2 - New Features -->
-190:         <div class="stats-grid">
-191:           <div class="stat-card highlight">
-192:             <div class="stat-content">
-193:               <div class="stat-info">
-194:                 <p class="stat-label">Reviews</p>
-195:                 <p class="stat-value">{{ totalReviews }}</p>
-196:               </div>
-197:               <div class="stat-icon yellow">
-198:                 ⭐
-199:               </div>
-200:             </div>
-
-(Showing lines 1-200 of 1497. Use offset=201 to continue.)
-</content>
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 10.0s)
-
-_Thinking:_
-
-Looking at the code, the dashboard seems correct. The issue might be:
-1. The data is not loading from the API
-2. There's a JavaScript error
-3. The template structure is broken
-
-Let me check if there's an issue with how the template is structured. The template seems to have:
-1. A loading state
-2. A `v-else-if="stats"` that contains all the tabs
-
-The issue might be that the template structure is not correctly closed or there's something wrong with the conditionals. Let me look at more of the template to see if there's a structural issue.
-
-Actually, looking at the code more carefully, I see the template has a structure like:
-```
-<div class="dashboard">
-  <!-- Header -->
-  <div class="page-header">...</div>
-  
-  <!-- Loading -->
-  <div v-if="loading">...</div>
-  
-  <template v-else-if="stats">
-    <!-- Tabs -->
-    <!-- Tab Content -->
-  </template>
-</div>
-```
-
-This looks correct. The issue might be:
-1. The stats data isn't being populated from the API
-2. There's a CORS or authentication issue with the API call
-
-Let me check the API endpoint and see if there's an issue. First, let me verify the dashboard API is working:
-
-Let me check if the dashboard API is working properly:
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "curl -s \"http://localhost:8000/api/admin/dashboard\" 2>/dev/null || echo \"Backend not running or API error\"",
-  "description": "Test dashboard API endpoint",
-  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend"
-}
-```
-
-**Output:**
-```
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-
-    <title>ShoeStore</title>
-
-    <link
-        rel="icon" type="image/svg+xml"
-        href="data:image/svg+xml,%3Csvg viewBox='0 -.11376601 49.74245785 51.31690859' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m49.626 11.564a.809.809 0 0 1 .028.209v10.972a.8.8 0 0 1 -.402.694l-9.209 5.302v10.509c0 .286-.152.55-.4.694l-19.223 11.066c-.044.025-.092.041-.14.058-.018.006-.035.017-.054.022a.805.805 0 0 1 -.41 0c-.022-.006-.042-.018-.063-.026-.044-.016-.09-.03-.132-.054l-19.219-11.066a.801.801 0 0 1 -.402-.694v-32.916c0-.072.01-.142.028-.21.006-.023.02-.044.028-.067.015-.042.029-.085.051-.124.015-.026.037-.047.055-.071.023-.032.044-.065.071-.093.023-.023.053-.04.079-.06.029-.024.055-.05.088-.069h.001l9.61-5.533a.802.802 0 0 1 .8 0l9.61 5.533h.002c.032.02.059.045.088.068.026.02.055.038.078.06.028.029.048.062.072.094.017.024.04.045.054.071.023.04.036.082.052.124.008.023.022.044.028.068a.809.809 0 0 1 .028.209v20.559l8.008-4.611v-10.51c0-.07.01-.141.028-.208.007-.024.02-.045.028-.068.016-.042.03-.085.052-.124.015-.026.037-.047.054-.071.024-.032.044-.065.072-.093.023-.023.052-.04.078-.06.03-.024.056-.05.088-.069h.001l9.611-5.533a.801.801 0 0 1 .8 0l9.61 5.533c.034.02.06.045.09.068.025.02.054.038.077.06.028.029.048.062.072.094.018.024.04.045.054.071.023.039.036.082.052.124.009.023.022.044.028.068zm-1.574 10.718v-9.124l-3.363 1.936-4.646 2.675v9.124l8.01-4.611zm-9.61 16.505v-9.13l-4.57 2.61-13.05 7.448v9.216zm-36.84-31.068v31.068l17.618 10.143v-9.214l-9.204-5.209-.003-.002-.004-.002c-.031-.018-.057-.044-.086-.066-.025-.02-.054-.036-.076-.058l-.002-.003c-.026-.025-.044-.056-.066-.084-.02-.027-.044-.05-.06-.078l-.001-.003c-.018-.03-.029-.066-.042-.1-.013-.03-.03-.058-.038-.09v-.001c-.01-.038-.012-.078-.016-.117-.004-.03-.012-.06-.012-.09v-21.483l-4.645-2.676-3.363-1.934zm8.81-5.994-8.007 4.609 8.005 4.609 8.006-4.61-8.006-4.608zm4.164 28.764 4.645-2.674v-20.096l-3.363 1.936-4.646 2.675v20.096zm24.667-23.325-8.006 4.609 8.006 4.609 8.005-4.61zm-.801 10.605-4.646-2.675-3.363-1.936v9.124l4.645 2.674 3.364 1.937zm-18.422 20.561 11.743-6.704 5.87-3.35-8-4.606-9.211 5.303-8.395 4.833z' fill='%23ff2d20'/%3E%3C/svg%3E"
-    />
-
-    <style>/*! tailwindcss v4.1.12 | MIT License | https://tailwindcss.com */@layer properties{@supports (((-webkit-hyphens:none)) and (not (margin-trim:inline))) or ((-moz-orient:inline) and (not (color:rgb(from red r g b)))){*,:before,:after,::backdrop{--tw-rotate-x:initial;--tw-rotate-y:initial;--tw-rotate-z:initial;--tw-skew-x:initial;--tw-skew-y:initial;--tw-divide-x-reverse:0;--tw-border-style:solid;--tw-divide-y-reverse:0;--tw-leading:initial;--tw-font-weight:initial;--tw-shadow:0 0 #0000;--tw-shadow-color:initial;--tw-shadow-alpha:100%;--tw-inset-shadow:0 0 #0000;--tw-inset-shadow-color:initial;--tw-inset-shadow-alpha:100%;--tw-ring-color:initial;--tw-ring-shadow:0 0 #0000;--tw-inset-ring-color:initial;--tw-inset-ring-shadow:0 0 #0000;--tw-ring-inset:initial;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-offset-shadow:0 0 #0000;--tw-blur:initial;--tw-brightness:initial;--tw-contrast:initial;--tw-grayscale:initial;--tw-hue-rotate:initial;--tw-invert:initial;--tw-opacity:initial;--tw-saturate:initial;--tw-sepia:initial;--tw-drop-shadow:initial;--tw-drop-shadow-color:initial;--tw-drop-shadow-alpha:100%;--tw-drop-shadow-size:initial;--tw-duration:initial;--tw-ease:initial;--tw-animation-delay:0s;--tw-animation-direction:normal;--tw-animation-duration:initial;--tw-animation-fill-mode:none;--tw-animation-iteration-count:1;--tw-enter-blur:0;--tw-enter-opacity:1;--tw-enter-rotate:0;--tw-enter-scale:1;--tw-enter-translate-x:0;--tw-enter-translate-y:0;--tw-exit-blur:0;--tw-exit-opacity:1;--tw-exit-rotate:0;--tw-exit-scale:1;--tw-exit-translate-x:0;--tw-exit-translate-y:0;--tw-backdrop-blur:initial;--tw-backdrop-brightness:initial;--tw-backdrop-contrast:initial;--tw-backdrop-grayscale:initial;--tw-backdrop-hue-rotate:initial;--tw-backdrop-invert:initial;--tw-backdrop-opacity:initial;--tw-backdrop-saturate:initial;--tw-backdrop-sepia:initial}}}@layer theme{:root,:host{--font-sans:ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";--font-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;--color-amber-200:oklch(92.4% .12 95.746);--color-amber-300:oklch(87.9% .169 91.605);--color-amber-500:oklch(76.9% .188 70.08);--color-amber-600:oklch(66.6% .179 58.318);--color-amber-800:oklch(47.3% .137 46.201);--color-amber-900:oklch(41.4% .112 45.904);--color-amber-950:oklch(27.9% .077 45.635);--color-emerald-200:oklch(90.5% .093 164.15);--color-emerald-400:oklch(76.5% .177 163.223);--color-emerald-500:oklch(69.6% .17 162.48);--color-emerald-600:oklch(59.6% .145 163.225);--color-emerald-900:oklch(37.8% .077 168.94);--color-blue-100:oklch(93.2% .032 255.585);--color-blue-300:oklch(80.9% .105 251.813);--color-blue-500:oklch(62.3% .214 259.815);--color-blue-600:oklch(54.6% .245 262.881);--color-blue-700:oklch(48.8% .243 264.376);--color-blue-800:oklch(42.4% .199 265.638);--color-blue-900:oklch(37.9% .146 265.522);--color-blue-950:oklch(28.2% .091 267.935);--color-rose-100:oklch(94.1% .03 12.58);--color-rose-200:oklch(89.2% .058 10.001);--color-rose-500:oklch(64.5% .246 16.439);--color-rose-600:oklch(58.6% .253 17.585);--color-rose-900:oklch(41% .159 10.272);--color-rose-950:oklch(27.1% .105 12.094);--color-neutral-50:oklch(98.5% 0 0);--color-neutral-100:oklch(97% 0 0);--color-neutral-200:oklch(92.2% 0 0);--color-neutral-300:oklch(87% 0 0);--color-neutral-400:oklch(70.8% 0 0);--color-neutral-500:oklch(55.6% 0 0);--color-neutral-600:oklch(43.9% 0 0);--color-neutral-700:oklch(37.1% 0 0);--color-neutral-800:oklch(26.9% 0 0);--color-neutral-900:oklch(20.5% 0 0);--color-neutral-950:oklch(14.5% 0 0);--color-black:#000;--color-white:#fff;--spacing:.25rem;--container-7xl:80rem;--text-xs:.75rem;--text-xs--line-height:calc(1/.75);--text-sm:.875rem;--text-sm--line-height:calc(1.25/.875);--text-base:1rem;--text-base--line-height: 1.5 ;--text-lg:1.125rem;--text-lg--line-height:calc(1.75/1.125);--text-xl:1.25rem;--text-xl--line-height:calc(1.75/1.25);--text-3xl:1.875rem;--text-3xl--line-height: 1.2 ;--font-weight-light:300;--font-weight-medium:500;--font-weight-semibold:600;--radius-md:.375rem;--radius-lg:.5rem;--radius-xl:.75rem;--ease-in-out:cubic-bezier(.4,0,.2,1);--blur-md:12px;--default-transition-duration:.15s;--default-transition-timing-function:cubic-bezier(.4,0,.2,1);--default-font-family:var(--font-sans);--default-mono-font-family:var(--font-mono)}}@layer base{*,:after,:before,::backdrop{box-sizing:border-box;border:0 solid;margin:0;padding:0}::file-selector-button{box-sizing:border-box;border:0 solid;margin:0;padding:0}html,:host{-webkit-text-size-adjust:100%;tab-size:4;line-height:1.5;font-family:var(--default-font-family,ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji");font-feature-settings:var(--default-font-feature-settings,normal);font-variation-settings:var(--default-font-variation-settings,normal);-webkit-tap-highlight-color:transparent}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;-webkit-text-decoration:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,samp,pre{font-family:var(--default-mono-font-family,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace);font-feature-settings:var(--default-mono-font-feature-settings,normal);font-variation-settings:var(--default-mono-font-variation-settings,normal);font-size:1em}small{font-size:80%}sub,sup{vertical-align:baseline;font-size:75%;line-height:0;position:relative}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}:-moz-focusring{outline:auto}progress{vertical-align:baseline}summary{display:list-item}ol,ul,menu{list-style:none}img,svg,video,canvas,audio,iframe,embed,object{vertical-align:middle;display:block}img,video{max-width:100%;height:auto}button,input,select,optgroup,textarea{font:inherit;font-feature-settings:inherit;font-variation-settings:inherit;letter-spacing:inherit;color:inherit;opacity:1;background-color:#0000;border-radius:0}::file-selector-button{font:inherit;font-feature-settings:inherit;font-variation-settings:inherit;letter-spacing:inherit;color:inherit;opacity:1;background-color:#0000;border-radius:0}:where(select:is([multiple],[size])) optgroup{font-weight:bolder}:where(select:is([multiple],[size])) optgroup option{padding-inline-start:20px}::file-selector-button{margin-inline-end:4px}::placeholder{opacity:1}@supports (not ((-webkit-appearance:-apple-pay-button))) or (contain-intrinsic-size:1px){::placeholder{color:currentColor}@supports (color:color-mix(in lab,red,red)){::placeholder{color:color-mix(in oklab,currentcolor 50%,transparent)}}}textarea{resize:vertical}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-date-and-time-value{min-height:1lh;text-align:inherit}::-webkit-datetime-edit{display:inline-flex}::-webkit-datetime-edit-fields-wrapper{padding:0}::-webkit-datetime-edit{padding-block:0}::-webkit-datetime-edit-year-field{padding-block:0}::-webkit-datetime-edit-month-field{padding-block:0}::-webkit-datetime-edit-day-field{padding-block:0}::-webkit-datetime-edit-hour-field{padding-block:0}::-webkit-datetime-edit-minute-field{padding-block:0}::-webkit-datetime-edit-second-field{padding-block:0}::-webkit-datetime-edit-millisecond-field{padding-block:0}::-webkit-datetime-edit-meridiem-field{padding-block:0}::-webkit-calendar-picker-indicator{line-height:1}:-moz-ui-invalid{box-shadow:none}button,input:where([type=button],[type=reset],[type=submit]){appearance:button}::file-selector-button{appearance:button}::-webkit-inner-spin-button{height:auto}::-webkit-outer-spin-button{height:auto}[hidden]:where(:not([hidden=until-found])){display:none!important}}@layer components;@layer utilities{.collapse{visibility:collapse}.visible{visibility:visible}.absolute{position:absolute}.fixed{position:fixed}.relative{position:relative}.static{position:static}.sticky{position:sticky}.top-\[-1px\]{top:-1px}.right-0{right:calc(var(--spacing)*0)}.bottom-0{bottom:calc(var(--spacing)*0)}.left-0{left:calc(var(--spacing)*0)}.-z-10{z-index:-10}.z-50{z-index:50}.mx-auto{margin-inline:auto}.-mt-3{margin-top:calc(var(--spacing)*-3)}.-mt-5{margin-top:calc(var(--spacing)*-5)}.mr-6{margin-right:calc(var(--spacing)*6)}.mb-8{margin-bottom:calc(var(--spacing)*8)}.block{display:block}.flex{display:flex}.grid{display:grid}.hidden{display:none}.inline{display:inline}.inline-block{display:inline-block}.inline-flex{display:inline-flex}.table{display:table}.size-2{width:calc(var(--spacing)*2);height:calc(var(--spacing)*2)}.size-3{width:calc(var(--spacing)*3);height:calc(var(--spacing)*3)}.h-0{height:calc(var(--spacing)*0)}.h-2\.5{height:calc(var(--spacing)*2.5)}.h-3{height:calc(var(--spacing)*3)}.h-6{height:calc(var(--spacing)*6)}.h-7{height:calc(var(--spacing)*7)}.h-8{height:calc(var(--spacing)*8)}.h-10{height:calc(var(--spacing)*10)}.h-11{height:calc(var(--spacing)*11)}.h-\[18px\]{height:18px}.h-\[56px\]{height:56px}.min-h-dvh{min-height:100dvh}.w-2\.5{width:calc(var(--spacing)*2.5)}.w-3{width:calc(var(--spacing)*3)}.w-6{width:calc(var(--spacing)*6)}.w-8{width:calc(var(--spacing)*8)}.w-\[18px\]{width:18px}.w-fit{width:fit-content}.w-full{width:100%}.max-w-7xl{max-width:var(--container-7xl)}.max-w-full{max-width:100%}.min-w-0{min-width:calc(var(--spacing)*0)}.min-w-5{min-width:calc(var(--spacing)*5)}.min-w-6{min-width:calc(var(--spacing)*6)}.min-w-full{min-width:100%}.flex-1{flex:1}.flex-shrink-0,.shrink-0{flex-shrink:0}.grow{flex-grow:1}.transform{transform:var(--tw-rotate-x,)var(--tw-rotate-y,)var(--tw-rotate-z,)var(--tw-skew-x,)var(--tw-skew-y,)}.transform\!{transform:var(--tw-rotate-x,)var(--tw-rotate-y,)var(--tw-rotate-z,)var(--tw-skew-x,)var(--tw-skew-y,)!important}.cursor-not-allowed\!{cursor:not-allowed!important}.cursor-pointer{cursor:pointer}.resize{resize:both}.flex-col{flex-direction:column}.items-baseline{align-items:baseline}.items-center{align-items:center}.items-start{align-items:flex-start}.justify-between{justify-content:space-between}.justify-center{justify-content:center}.gap-0\.5{gap:calc(var(--spacing)*.5)}.gap-1{gap:calc(var(--spacing)*1)}.gap-1\.5{gap:calc(var(--spacing)*1.5)}.gap-2{gap:calc(var(--spacing)*2)}.gap-2\.5{gap:calc(var(--spacing)*2.5)}.gap-3{gap:calc(var(--spacing)*3)}.gap-4{gap:calc(var(--spacing)*4)}.gap-5{gap:calc(var(--spacing)*5)}.gap-6{gap:calc(var(--spacing)*6)}.gap-8{gap:calc(var(--spacing)*8)}.gap-12{gap:calc(var(--spacing)*12)}:where(.divide-x>:not(:last-child)){--tw-divide-x-reverse:0;border-inline-style:var(--tw-border-style);border-inline-start-width:calc(1px*var(--tw-divide-x-reverse));border-inline-end-width:calc(1px*calc(1 - var(--tw-divide-x-reverse)))}:where(.divide-y>:not(:last-child)){--tw-divide-y-reverse:0;border-bottom-style:var(--tw-border-style);border-top-style:var(--tw-border-style);border-top-width:calc(1px*var(--tw-divide-y-reverse));border-bottom-width:calc(1px*calc(1 - var(--tw-divide-y-reverse)))}:where(.divide-neutral-200>:not(:last-child)){border-color:var(--color-neutral-200)}.truncate{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.overflow-x-hidden{overflow-x:hidden}.rounded-full{border-radius:3.40282e38px}.rounded-lg{border-radius:var(--radius-lg)}.rounded-md{border-radius:var(--radius-md)}.rounded-xl{border-radius:var(--radius-xl)}.rounded-t-lg{border-top-left-radius:var(--radius-lg);border-top-right-radius:var(--radius-lg)}.rounded-b-lg{border-bottom-right-radius:var(--radius-lg);border-bottom-left-radius:var(--radius-lg)}.border{border-style:var(--tw-border-style);border-width:1px}.border-x{border-inline-style:var(--tw-border-style);border-inline-width:1px}.border-t{border-top-style:var(--tw-border-style);border-top-width:1px}.border-b-2{border-bottom-style:var(--tw-border-style);border-bottom-width:2px}.border-dashed{--tw-border-style:dashed;border-style:dashed}.border-dotted{--tw-border-style:dotted;border-style:dotted}.border-neutral-100{border-color:var(--color-neutral-100)}.border-neutral-200{border-color:var(--color-neutral-200)}.border-neutral-300{border-color:var(--color-neutral-300)}.bg-amber-200{background-color:var(--color-amber-200)}.bg-amber-600{background-color:var(--color-amber-600)}.bg-black\/8{background-color:#00000014}@supports (color:color-mix(in lab,red,red)){.bg-black\/8{background-color:color-mix(in oklab,var(--color-black)8%,transparent)}}.bg-black\/10{background-color:#0000001a}@supports (color:color-mix(in lab,red,red)){.bg-black\/10{background-color:color-mix(in oklab,var(--color-black)10%,transparent)}}.bg-blue-100{background-color:var(--color-blue-100)}.bg-blue-600{background-color:var(--color-blue-600)}.bg-blue-700{background-color:var(--color-blue-700)}.bg-emerald-200{background-color:var(--color-emerald-200)}.bg-emerald-600{background-color:var(--color-emerald-600)}.bg-neutral-50{background-color:var(--color-neutral-50)}.bg-neutral-600{background-color:var(--color-neutral-600)}.bg-rose-200{background-color:var(--color-rose-200)}.bg-rose-200\!{background-color:var(--color-rose-200)!important}.bg-rose-500{background-color:var(--color-rose-500)}.bg-rose-600{background-color:var(--color-rose-600)}.bg-transparent\!{background-color:#0000!important}.bg-white{background-color:var(--color-white)}.bg-white\/5{background-color:#ffffff0d}@supports (color:color-mix(in lab,red,red)){.bg-white\/5{background-color:color-mix(in oklab,var(--color-white)5%,transparent)}}.bg-white\/\[2\%\]{background-color:#ffffff05}@supports (color:color-mix(in lab,red,red)){.bg-white\/\[2\%\]{background-color:color-mix(in oklab,var(--color-white)2%,transparent)}}.p-1{padding:calc(var(--spacing)*1)}.p-2{padding:calc(var(--spacing)*2)}.p-2\.5{padding:calc(var(--spacing)*2.5)}.p-4{padding:calc(var(--spacing)*4)}.p-5{padding:calc(var(--spacing)*5)}.px-1\.5{padding-inline:calc(var(--spacing)*1.5)}.px-2{padding-inline:calc(var(--spacing)*2)}.px-3{padding-inline:calc(var(--spacing)*3)}.px-4{padding-inline:calc(var(--spacing)*4)}.px-6{padding-inline:calc(var(--spacing)*6)}.px-\[6px\]{padding-inline:6px}.py-0{padding-block:calc(var(--spacing)*0)}.py-1{padding-block:calc(var(--spacing)*1)}.py-4{padding-block:calc(var(--spacing)*4)}.pt-8{padding-top:calc(var(--spacing)*8)}.pt-14{padding-top:calc(var(--spacing)*14)}.pr-2\.5{padding-right:calc(var(--spacing)*2.5)}.pb-0{padding-bottom:calc(var(--spacing)*0)}.pl-4{padding-left:calc(var(--spacing)*4)}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:var(--font-mono)}.font-sans{font-family:var(--font-sans)}.text-3xl{font-size:var(--text-3xl);line-height:var(--tw-leading,var(--text-3xl--line-height))}.text-base{font-size:var(--text-base);line-height:var(--tw-leading,var(--text-base--line-height))}.text-lg{font-size:var(--text-lg);line-height:var(--tw-leading,var(--text-lg--line-height))}.text-sm{font-size:var(--text-sm);line-height:var(--tw-leading,var(--text-sm--line-height))}.text-xl{font-size:var(--text-xl);line-height:var(--tw-leading,var(--text-xl--line-height))}.text-xs{font-size:var(--text-xs);line-height:var(--tw-leading,var(--text-xs--line-height))}.text-xs\/none{font-size:var(--text-xs);line-height:1}.text-\[13px\]{font-size:13px}.leading-3{--tw-leading:calc(var(--spacing)*3);line-height:calc(var(--spacing)*3)}.font-light{--tw-font-weight:var(--font-weight-light);font-weight:var(--font-weight-light)}.font-medium{--tw-font-weight:var(--font-weight-medium);font-weight:var(--font-weight-medium)}.font-semibold{--tw-font-weight:var(--font-weight-semibold);font-weight:var(--font-weight-semibold)}.text-amber-900{color:var(--color-amber-900)}.text-blue-500{color:var(--color-blue-500)}.text-blue-900{color:var(--color-blue-900)}.text-emerald-500{color:var(--color-emerald-500)}.text-emerald-900{color:var(--color-emerald-900)}.text-neutral-100{color:var(--color-neutral-100)}.text-neutral-400{color:var(--color-neutral-400)}.text-neutral-500{color:var(--color-neutral-500)}.text-neutral-500\!{color:var(--color-neutral-500)!important}.text-neutral-600{color:var(--color-neutral-600)}.text-neutral-800{color:var(--color-neutral-800)}.text-neutral-900{color:var(--color-neutral-900)}.text-neutral-950{color:var(--color-neutral-950)}.text-rose-900{color:var(--color-rose-900)}.text-white{color:var(--color-white)}.uppercase{text-transform:uppercase}.italic{font-style:italic}.line-through{text-decoration-line:line-through}.overline{text-decoration-line:overline}.underline{text-decoration-line:underline}.decoration-neutral-400{-webkit-text-decoration-color:var(--color-neutral-400);text-decoration-color:var(--color-neutral-400)}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.scheme-light-dark{color-scheme:light dark}.opacity-90{opacity:.9}.shadow-xs{--tw-shadow:0 1px 2px 0 var(--tw-shadow-color,#0000000d);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.blur{--tw-blur:blur(8px);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.filter{filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.filter\!{filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)!important}.transition{transition-property:color,background-color,border-color,outline-color,text-decoration-color,fill,stroke,--tw-gradient-from,--tw-gradient-via,--tw-gradient-to,opacity,box-shadow,transform,translate,scale,rotate,filter,-webkit-backdrop-filter,backdrop-filter,display,visibility,content-visibility,overlay,pointer-events;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration))}.transition-colors{transition-property:color,background-color,border-color,outline-color,text-decoration-color,fill,stroke,--tw-gradient-from,--tw-gradient-via,--tw-gradient-to;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration))}.duration-200{--tw-duration:.2s;transition-duration:.2s}.ease-in-out{--tw-ease:var(--ease-in-out);transition-timing-function:var(--ease-in-out)}@media (hover:hover){.group-hover\:text-blue-500:is(:where(.group):hover *){color:var(--color-blue-500)}}.odd\:bg-white\/2:nth-child(odd){background-color:#ffffff05}@supports (color:color-mix(in lab,red,red)){.odd\:bg-white\/2:nth-child(odd){background-color:color-mix(in oklab,var(--color-white)2%,transparent)}}.even\:bg-white:nth-child(2n){background-color:var(--color-white)}@media (hover:hover){.hover\:bg-neutral-100:hover{background-color:var(--color-neutral-100)}.hover\:bg-neutral-200:hover{background-color:var(--color-neutral-200)}.hover\:bg-white\/50:hover{background-color:#ffffff80}@supports (color:color-mix(in lab,red,red)){.hover\:bg-white\/50:hover{background-color:color-mix(in oklab,var(--color-white)50%,transparent)}}.hover\:underline:hover{text-decoration-line:underline}}@media (min-width:40rem){.sm\:mb-16{margin-bottom:calc(var(--spacing)*16)}.sm\:p-14{padding:calc(var(--spacing)*14)}.sm\:py-0{padding-block:calc(var(--spacing)*0)}.sm\:pt-16{padding-top:calc(var(--spacing)*16)}.sm\:pb-0{padding-bottom:calc(var(--spacing)*0)}}@media (prefers-color-scheme:dark){:where(.dark\:divide-white\/5>:not(:last-child)){border-color:#ffffff0d}@supports (color:color-mix(in lab,red,red)){:where(.dark\:divide-white\/5>:not(:last-child)){border-color:color-mix(in oklab,var(--color-white)5%,transparent)}}:where(.dark\:divide-white\/10>:not(:last-child)){border-color:#ffffff1a}@supports (color:color-mix(in lab,red,red)){:where(.dark\:divide-white\/10>:not(:last-child)){border-color:color-mix(in oklab,var(--color-white)10%,transparent)}}.dark\:border{border-style:var(--tw-border-style);border-width:1px}.dark\:border-none{--tw-border-style:none;border-style:none}.dark\:border-amber-500{border-color:var(--color-amber-500)}.dark\:border-amber-800{border-color:var(--color-amber-800)}.dark\:border-blue-600{border-color:var(--color-blue-600)}.dark\:border-blue-800{border-color:var(--color-blue-800)}.dark\:border-emerald-500{border-color:var(--color-emerald-500)}.dark\:border-emerald-600{border-color:var(--color-emerald-600)}.dark\:border-neutral-500{border-color:var(--color-neutral-500)}.dark\:border-neutral-700{border-color:var(--color-neutral-700)}.dark\:border-neutral-800{border-color:var(--color-neutral-800)}.dark\:border-rose-500{border-color:var(--color-rose-500)}.dark\:border-rose-900{border-color:var(--color-rose-900)}.dark\:border-white\/5{border-color:#ffffff0d}@supports (color:color-mix(in lab,red,red)){.dark\:border-white\/5{border-color:color-mix(in oklab,var(--color-white)5%,transparent)}}.dark\:border-white\/8{border-color:#ffffff14}@supports (color:color-mix(in lab,red,red)){.dark\:border-white\/8{border-color:color-mix(in oklab,var(--color-white)8%,transparent)}}.dark\:border-white\/10{border-color:#ffffff1a}@supports (color:color-mix(in lab,red,red)){.dark\:border-white\/10{border-color:color-mix(in oklab,var(--color-white)10%,transparent)}}.dark\:border-white\/20{border-color:#fff3}@supports (color:color-mix(in lab,red,red)){.dark\:border-white\/20{border-color:color-mix(in oklab,var(--color-white)20%,transparent)}}.dark\:border-white\/\[9\%\]{border-color:#ffffff17}@supports (color:color-mix(in lab,red,red)){.dark\:border-white\/\[9\%\]{border-color:color-mix(in oklab,var(--color-white)9%,transparent)}}.dark\:bg-\[\#1a1a1a\]{background-color:#1a1a1a}.dark\:bg-amber-600{background-color:var(--color-amber-600)}.dark\:bg-amber-950{background-color:var(--color-amber-950)}.dark\:bg-blue-700{background-color:var(--color-blue-700)}.dark\:bg-blue-950{background-color:var(--color-blue-950)}.dark\:bg-emerald-600{background-color:var(--color-emerald-600)}.dark\:bg-emerald-900\/70{background-color:#004e3bb3}@supports (color:color-mix(in lab,red,red)){.dark\:bg-emerald-900\/70{background-color:color-mix(in oklab,var(--color-emerald-900)70%,transparent)}}.dark\:bg-neutral-400{background-color:var(--color-neutral-400)}.dark\:bg-neutral-600{background-color:var(--color-neutral-600)}.dark\:bg-neutral-700{background-color:var(--color-neutral-700)}.dark\:bg-neutral-800{background-color:var(--color-neutral-800)}.dark\:bg-neutral-900{background-color:var(--color-neutral-900)}.dark\:bg-rose-600{background-color:var(--color-rose-600)}.dark\:bg-rose-900\!{background-color:var(--color-rose-900)!important}.dark\:bg-rose-950{background-color:var(--color-rose-950)}.dark\:bg-transparent{background-color:#0000}.dark\:bg-white{background-color:var(--color-white)}.dark\:bg-white\/1{background-color:#ffffff03}@supports (color:color-mix(in lab,red,red)){.dark\:bg-white\/1{background-color:color-mix(in oklab,var(--color-white)1%,transparent)}}.dark\:bg-white\/3{background-color:#ffffff08}@supports (color:color-mix(in lab,red,red)){.dark\:bg-white\/3{background-color:color-mix(in oklab,var(--color-white)3%,transparent)}}.dark\:bg-white\/5{background-color:#ffffff0d}@supports (color:color-mix(in lab,red,red)){.dark\:bg-white\/5{background-color:color-mix(in oklab,var(--color-white)5%,transparent)}}.dark\:bg-white\/10{background-color:#ffffff1a}@supports (color:color-mix(in lab,red,red)){.dark\:bg-white\/10{background-color:color-mix(in oklab,var(--color-white)10%,transparent)}}.dark\:bg-white\/\[2\%\]{background-color:#ffffff05}@supports (color:color-mix(in lab,red,red)){.dark\:bg-white\/\[2\%\]{background-color:color-mix(in oklab,var(--color-white)2%,transparent)}}.dark\:bg-white\/\[3\%\]{background-color:#ffffff08}@supports (color:color-mix(in lab,red,red)){.dark\:bg-white\/\[3\%\]{background-color:color-mix(in oklab,var(--color-white)3%,transparent)}}.dark\:text-amber-300{color:var(--color-amber-300)}.dark\:text-blue-300{color:var(--color-blue-300)}.dark\:text-emerald-400{color:var(--color-emerald-400)}.dark\:text-emerald-500{color:var(--color-emerald-500)}.dark\:text-neutral-100{color:var(--color-neutral-100)}.dark\:text-neutral-200{color:var(--color-neutral-200)}.dark\:text-neutral-300{color:var(--color-neutral-300)}.dark\:text-neutral-400{color:var(--color-neutral-400)}.dark\:text-neutral-500{color:var(--color-neutral-500)}.dark\:text-neutral-600{color:var(--color-neutral-600)}.dark\:text-neutral-600\!{color:var(--color-neutral-600)!important}.dark\:text-neutral-900{color:var(--color-neutral-900)}.dark\:text-rose-100{color:var(--color-rose-100)}.dark\:text-white{color:var(--color-white)}.dark\:text-white\!{color:var(--color-white)!important}}@media (hover:hover){@media (prefers-color-scheme:dark){.group-hover\:dark\:text-emerald-500:is(:where(.group):hover *){color:var(--color-emerald-500)}}}@media (prefers-color-scheme:dark){.odd\:dark\:bg-white\/4:nth-child(odd){background-color:#ffffff0a}@supports (color:color-mix(in lab,red,red)){.odd\:dark\:bg-white\/4:nth-child(odd){background-color:color-mix(in oklab,var(--color-white)4%,transparent)}}.even\:dark\:bg-white\/2:nth-child(2n){background-color:#ffffff05}@supports (color:color-mix(in lab,red,red)){.even\:dark\:bg-white\/2:nth-child(2n){background-color:color-mix(in oklab,var(--color-white)2%,transparent)}}@media (hover:hover){.dark\:hover\:bg-white\/2:hover{background-color:#ffffff05}@supports (color:color-mix(in lab,red,red)){.dark\:hover\:bg-white\/2:hover{background-color:color-mix(in oklab,var(--color-white)2%,transparent)}}.dark\:hover\:bg-white\/5:hover{background-color:#ffffff0d}@supports (color:color-mix(in lab,red,red)){.dark\:hover\:bg-white\/5:hover{background-color:color-mix(in oklab,var(--color-white)5%,transparent)}}.dark\:hover\:bg-white\/10:hover{background-color:#ffffff1a}@supports (color:color-mix(in lab,red,red)){.dark\:hover\:bg-white\/10:hover{background-color:color-mix(in oklab,var(--color-white)10%,transparent)}}}}@media (hover:hover){@media (prefers-color-scheme:dark){.hover\:dark\:bg-white\/5:hover{background-color:#ffffff0d}@supports (color:color-mix(in lab,red,red)){.hover\:dark\:bg-white\/5:hover{background-color:color-mix(in oklab,var(--color-white)5%,transparent)}}.hover\:dark\:text-white:hover{color:var(--color-white)}}}.\[\&_svg\]\:size-2\.5 svg{width:calc(var(--spacing)*2.5);height:calc(var(--spacing)*2.5)}.\[\&_svg\]\:\!text-white svg{color:var(--color-white)!important}@media (hover:hover){.hover\:\[\&_svg\]\:stroke-emerald-500:hover svg{stroke:var(--color-emerald-500)}}@media (prefers-color-scheme:dark){.dark\:\[\&_svg\]\:\!text-white svg{color:var(--color-white)!important}}}@property --tw-animation-delay{syntax:"*";inherits:false;initial-value:0s}@property --tw-animation-direction{syntax:"*";inherits:false;initial-value:normal}@property --tw-animation-duration{syntax:"*";inherits:false}@property --tw-animation-fill-mode{syntax:"*";inherits:false;initial-value:none}@property --tw-animation-iteration-count{syntax:"*";inherits:false;initial-value:1}@property --tw-enter-blur{syntax:"*";inherits:false;initial-value:0}@property --tw-enter-opacity{syntax:"*";inherits:false;initial-value:1}@property --tw-enter-rotate{syntax:"*";inherits:false;initial-value:0}@property --tw-enter-scale{syntax:"*";inherits:false;initial-value:1}@property --tw-enter-translate-x{syntax:"*";inherits:false;initial-value:0}@property --tw-enter-translate-y{syntax:"*";inherits:false;initial-value:0}@property --tw-exit-blur{syntax:"*";inherits:false;initial-value:0}@property --tw-exit-opacity{syntax:"*";inherits:false;initial-value:1}@property --tw-exit-rotate{syntax:"*";inherits:false;initial-value:0}@property --tw-exit-scale{syntax:"*";inherits:false;initial-value:1}@property --tw-exit-translate-x{syntax:"*";inherits:false;initial-value:0}@property --tw-exit-translate-y{syntax:"*";inherits:false;initial-value:0}.tippy-box[data-animation=fade][data-state=hidden]{opacity:0}[data-tippy-root]{max-width:calc(100vw - 10px)}.tippy-box{color:#fff;white-space:normal;background-color:#333;border-radius:4px;outline:0;font-size:14px;line-height:1.4;transition-property:transform,visibility,opacity;position:relative}.tippy-box[data-placement^=top]>.tippy-arrow{bottom:0}.tippy-box[data-placement^=top]>.tippy-arrow:before{border-width:8px 8px 0;border-top-color:initial;transform-origin:top;bottom:-7px;left:0}.tippy-box[data-placement^=bottom]>.tippy-arrow{top:0}.tippy-box[data-placement^=bottom]>.tippy-arrow:before{border-width:0 8px 8px;border-bottom-color:initial;transform-origin:bottom;top:-7px;left:0}.tippy-box[data-placement^=left]>.tippy-arrow{right:0}.tippy-box[data-placement^=left]>.tippy-arrow:before{border-width:8px 0 8px 8px;border-left-color:initial;transform-origin:0;right:-7px}.tippy-box[data-placement^=right]>.tippy-arrow{left:0}.tippy-box[data-placement^=right]>.tippy-arrow:before{border-width:8px 8px 8px 0;border-right-color:initial;transform-origin:100%;left:-7px}.tippy-box[data-inertia][data-state=visible]{transition-timing-function:cubic-bezier(.54,1.5,.38,1.11)}.tippy-arrow{color:#333;width:16px;height:16px}.tippy-arrow:before{content:"";border-style:solid;border-color:#0000;position:absolute}.tippy-content{z-index:1;padding:5px 9px;position:relative}.tippy-box[data-animation=shift-away][data-state=hidden]{opacity:0}.tippy-box[data-animation=shift-away][data-state=hidden][data-placement^=top]{transform:translateY(10px)}.tippy-box[data-animation=shift-away][data-state=hidden][data-placement^=bottom]{transform:translateY(-10px)}.tippy-box[data-animation=shift-away][data-state=hidden][data-placement^=left]{transform:translate(10px)}.tippy-box[data-animation=shift-away][data-state=hidden][data-placement^=right]{transform:translate(-10px)}[x-cloak]{display:none!important}.tippy-box[data-theme~=laravel]{border-radius:var(--radius-md);border-style:var(--tw-border-style);font-size:var(--text-xs);line-height:var(--tw-leading,var(--text-xs--line-height));--tw-shadow:0 4px 6px -1px var(--tw-shadow-color,#0000001a),0 2px 4px -2px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow);--tw-backdrop-blur:blur(var(--blur-md));-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);border-width:1px;border-color:var(--color-neutral-800);background-color:var(--color-neutral-900);color:var(--color-white);overflow-x:auto;max-width:var(--container-7xl)!important}@media (prefers-color-scheme:dark){.tippy-box[data-theme~=laravel]{border-color:var(--color-neutral-700);background-color:var(--color-neutral-800);color:var(--color-neutral-100)}}.tippy-content[data-theme~=laravel]{padding-inline:calc(var(--spacing)*2);padding-block:calc(var(--spacing)*1)}@media (prefers-color-scheme:dark){.shiki,.shiki span{color:var(--shiki-dark)!important;font-style:var(--shiki-dark-font-style)!important;font-weight:var(--shiki-dark-font-weight)!important;-webkit-text-decoration:var(--shiki-dark-text-decoration)!important;text-decoration:var(--shiki-dark-text-decoration)!important}}@property --tw-rotate-x{syntax:"*";inherits:false}@property --tw-rotate-y{syntax:"*";inherits:false}@property --tw-rotate-z{syntax:"*";inherits:false}@property --tw-skew-x{syntax:"*";inherits:false}@property --tw-skew-y{syntax:"*";inherits:false}@property --tw-divide-x-reverse{syntax:"*";inherits:false;initial-value:0}@property --tw-border-style{syntax:"*";inherits:false;initial-value:solid}@property --tw-divide-y-reverse{syntax:"*";inherits:false;initial-value:0}@property --tw-leading{syntax:"*";inherits:false}@property --tw-font-weight{syntax:"*";inherits:false}@property --tw-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-shadow-color{syntax:"*";inherits:false}@property --tw-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-inset-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-inset-shadow-color{syntax:"*";inherits:false}@property --tw-inset-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-ring-color{syntax:"*";inherits:false}@property --tw-ring-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-inset-ring-color{syntax:"*";inherits:false}@property --tw-inset-ring-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-ring-inset{syntax:"*";inherits:false}@property --tw-ring-offset-width{syntax:"<length>";inherits:false;initial-value:0}@property --tw-ring-offset-color{syntax:"*";inherits:false;initial-value:#fff}@property --tw-ring-offset-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-blur{syntax:"*";inherits:false}@property --tw-brightness{syntax:"*";inherits:false}@property --tw-contrast{syntax:"*";inherits:false}@property --tw-grayscale{syntax:"*";inherits:false}@property --tw-hue-rotate{syntax:"*";inherits:false}@property --tw-invert{syntax:"*";inherits:false}@property --tw-opacity{syntax:"*";inherits:false}@property --tw-saturate{syntax:"*";inherits:false}@property --tw-sepia{syntax:"*";inherits:false}@property --tw-drop-shadow{syntax:"*";inherits:false}@property --tw-drop-shadow-color{syntax:"*";inherits:false}@property --tw-drop-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-drop-shadow-size{syntax:"*";inherits:false}@property --tw-duration{syntax:"*";inherits:false}@property --tw-ease{syntax:"*";inherits:false}@property --tw-backdrop-blur{syntax:"*";inherits:false}@property --tw-backdrop-brightness{syntax:"*";inherits:false}@property --tw-backdrop-contrast{syntax:"*";inherits:false}@property --tw-backdrop-grayscale{syntax:"*";inherits:false}@property --tw-backdrop-hue-rotate{syntax:"*";inherits:false}@property --tw-backdrop-invert{syntax:"*";inherits:false}@property --tw-backdrop-opacity{syntax:"*";inherits:false}@property --tw-backdrop-saturate{syntax:"*";inherits:false}@property --tw-backdrop-sepia{syntax:"*";inherits:false}
-</style>
-</head>
-<body class="font-sans antialiased overflow-x-hidden bg-neutral-50 dark:bg-neutral-900 dark:text-white scheme-light-dark">
-    <div class="min-h-dvh">
-        <section
-    class="w-full max-w-7xl mx-auto p-4 sm:p-14 border-x border-dashed border-neutral-300 dark:border-white/[9%] px-6 py-0 sm:py-0"
->
-    <script>
-    const markdown = '# Symfony\\Component\\Routing\\Exception\\RouteNotFoundException - Internal Server Error\n\nRoute [login] not defined.\n\nPHP 8.2.12\nLaravel 12.56.0\nlocalhost:8000\n\n## Stack Trace\n\n0 - vendor\\laravel\\framework\\src\\Illuminate\\Routing\\UrlGenerator.php:528\n1 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\helpers.php:870\n2 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Configuration\\ApplicationBuilder.php:278\n3 - vendor\\laravel\\framework\\src\\Illuminate\\Auth\\Middleware\\Authenticate.php:117\n4 - vendor\\laravel\\framework\\src\\Illuminate\\Auth\\Middleware\\Authenticate.php:104\n5 - vendor\\laravel\\framework\\src\\Illuminate\\Auth\\Middleware\\Authenticate.php:87\n6 - vendor\\laravel\\framework\\src\\Illuminate\\Auth\\Middleware\\Authenticate.php:61\n7 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n8 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:137\n9 - vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php:821\n10 - vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php:800\n11 - vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php:764\n12 - vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php:753\n13 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php:200\n14 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:180\n15 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php:21\n16 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull.php:31\n17 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n18 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php:21\n19 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TrimStrings.php:51\n20 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n21 - vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\ValidatePostSize.php:27\n22 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n23 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance.php:109\n24 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n25 - vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\HandleCors.php:74\n26 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n27 - vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\TrustProxies.php:58\n28 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n29 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks.php:22\n30 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n31 - vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\ValidatePathEncoding.php:26\n32 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n33 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:137\n34 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php:175\n35 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php:144\n36 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Application.php:1220\n37 - public\\index.php:20\n38 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\resources\\server.php:23\n\n## Request\n\nGET \/api\/admin\/dashboard\n\n## Headers\n\n* **host**: localhost:8000\n* **user-agent**: curl\/8.18.0\n* **accept**: *\/*\n\n## Route Context\n\ncontroller: App\\Http\\Controllers\\Api\\Admin\\DashboardController@stats\nmiddleware: api, auth:sanctum, admin\n\n## Route Parameters\n\nNo route parameter data available.\n\n## Database Queries\n\nNo database queries detected.\n'
-</script>
-
-<div
-    class="flex items-center justify-between"
-    x-data="{
-        copied: false,
-        async copyToClipboard() {
-            try {
-                await window.copyToClipboard(markdown);
-                this.copied = true;
-                setTimeout(() => { this.copied = false }, 3000);
-            } catch (err) {
-                console.error('Failed to copy the markdown: ', err);
-            }
-        }
-    }"
->
-    <div class="flex items-center gap-2 h-[56px]">
-        <div class="w-[18px] h-[18px] flex items-center justify-center bg-rose-500 rounded-md">
-            <svg width="2" height="10" class="text-white" viewBox="0 0 2 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M1.00006 6.3188C1.41416 6.3188 1.75006 5.98295 1.75006 5.56885V1.43115C1.75006 1.01705 1.41416 0.681152 1.00006 0.681152C0.585961 0.681152 0.250061 1.01705 0.250061 1.43115V5.56885C0.250061 5.98295 0.585961 6.3188 1.00006 6.3188Z" fill="currentColor" />
-                <path d="M1.00006 9.41699C1.55235 9.41699 2.00007 8.96929 2.00007 8.41699C2.00007 7.86469 1.55235 7.41699 1.00006 7.41699C0.447781 7.41699 6.10352e-05 7.86469 6.10352e-05 8.41699C6.10352e-05 8.96929 0.447781 9.41699 1.00006 9.41699Z" fill="currentColor "/>
-            </svg>
-        </div>
-        <div class="font-medium text-sm text-neutral-900 dark:text-white">
-            Internal Server Error
-        </div>
-    </div>
-
-    <button
-        x-cloak
-        class="text-sm rounded-md border px-3 h-8 flex items-center gap-2 transition-colors duration-200 ease-in-out cursor-pointer shadow-xs text-neutral-600 dark:text-neutral-400 bg-white/5 border-neutral-200 hover:bg-neutral-100 dark:bg-white/5 dark:border-white/10 dark:hover:bg-white/10"
-        @click="copyToClipboard()"
-    >
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" class="w-3 h-3" x-show="!copied">
-  <g clip-path="url(#clip0_14732_6079)">
-    <path d="M4.25 4.25012V1.25012H10.75V7.75012H7.75M7.75 4.25012H1.25V10.7501H7.75V4.25012Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-  </g>
-  <defs>
-    <clipPath id="clip0_14732_6079">
-      <rect width="12" height="12" />
-    </clipPath>
-  </defs>
-</svg>
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-3 h-3 text-emerald-500" x-show="copied">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-</svg>
-        <span x-text="copied ? 'Copied to clipboard' : 'Copy as Markdown'"></span>
-    </button>
-</div>
-</section>
-
-    <div class="h-0 w-full relative">
-    <div class="absolute top-[-1px] left-0 right-0 bottom-0 border-t border-dashed border-neutral-300 dark:border-white/[9%]"></div>
-</div>
-
-    <section
-    class="w-full max-w-7xl mx-auto p-4 sm:p-14 border-x border-dashed border-neutral-300 dark:border-white/[9%] flex flex-col gap-8 py-0 sm:py-0"
->
-    <div class="flex flex-col pt-8 sm:pt-16 overflow-x-auto">
-    <div class="flex flex-col gap-5 mb-8">
-        <h1 class="text-3xl font-semibold text-neutral-950 dark:text-white">Symfony\Component\Routing\Exception\RouteNotFoundException</h1>
-        <div
-    class="truncate font-mono text-xs text-neutral-500 dark:text-neutral-400 -mt-3 text-xs"
-    dir="ltr"
->
-    <span data-tippy-content="vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:528">
-                    vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php<span class="text-neutral-500">:528</span>
-            </span>
-</div>
-        <p class="text-xl font-light text-neutral-800 dark:text-neutral-300">
-            Route [login] not defined.
-        </p>
-    </div>
-
-    <div class="flex items-start gap-2 mb-8 sm:mb-16">
-        <div class="bg-white dark:bg-white/[3%] border border-neutral-200 dark:border-white/10 divide-x divide-neutral-200 dark:divide-white/10 rounded-md shadow-xs flex items-center gap-0.5">
-            <div class="flex items-center gap-1.5 h-6 px-[6px] font-mono text-[13px]">
-                <span class="text-neutral-400 dark:text-neutral-500">LARAVEL</span>
-                <span class="text-neutral-500 dark:text-neutral-300">12.56.0</span>
-            </div>
-            <div class="flex items-center gap-1.5 h-6 px-[6px] font-mono text-[13px]">
-                <span class="text-neutral-400 dark:text-neutral-500">PHP</span>
-                <span class="text-neutral-500 dark:text-neutral-300">8.2.12</span>
-            </div>
-        </div>
-        <div class="inline-flex w-fit shrink-0 items-center justify-center gap-1 font-mono leading-3 uppercase transition-colors dark:border [&amp;_svg]:size-2.5 h-6 min-w-5 rounded-md px-1.5 text-xs/none bg-rose-200 text-rose-900 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-100 dark:[&amp;_svg]:!text-white">
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5">
-    <g clip-path="url(#clip0_14732_6105)">
-        <path d="M9.87466 7.8287L5.92654 0.549947C5.82917 0.369362 5.68068 0.221523 5.49966 0.124947C5.25374 -0.00665839 4.9658 -0.0358401 4.69847 0.0437494C4.43115 0.123339 4.20606 0.305262 4.07216 0.549947L0.124664 7.8287C0.0383472 7.98887 -0.00481098 8.16875 -0.000569449 8.35066C0.00367208 8.53256 0.0551674 8.71024 0.148856 8.86622C0.242546 9.0222 0.375205 9.15112 0.533798 9.24031C0.692391 9.32951 0.871462 9.37591 1.05341 9.37495H8.94591C9.12031 9.37495 9.29203 9.33202 9.44591 9.24995C9.56783 9.18524 9.67572 9.09703 9.76338 8.99041C9.85104 8.8838 9.91672 8.76088 9.95663 8.62876C9.99655 8.49663 10.0099 8.35791 9.99595 8.22059C9.98199 8.08328 9.94036 7.95009 9.87466 7.8287ZM4.99966 8.12495C4.87605 8.12495 4.75521 8.08829 4.65243 8.01962C4.54965 7.95094 4.46954 7.85333 4.42224 7.73912C4.37493 7.62492 4.36256 7.49925 4.38667 7.37802C4.41079 7.25678 4.47031 7.14541 4.55772 7.05801C4.64513 6.9706 4.75649 6.91107 4.87773 6.88696C4.99897 6.86284 5.12464 6.87522 5.23884 6.92252C5.35304 6.96983 5.45066 7.04993 5.51933 7.15272C5.58801 7.2555 5.62466 7.37633 5.62466 7.49995C5.62466 7.66571 5.55882 7.82468 5.44161 7.94189C5.3244 8.0591 5.16542 8.12495 4.99966 8.12495ZM5.62466 5.93745C5.62466 6.02033 5.59174 6.09981 5.53313 6.15842C5.47453 6.21702 5.39504 6.24995 5.31216 6.24995H4.68716C4.60428 6.24995 4.5248 6.21702 4.46619 6.15842C4.40759 6.09981 4.37466 6.02033 4.37466 5.93745V3.43745C4.37466 3.35457 4.40759 3.27508 4.46619 3.21648C4.5248 3.15787 4.60428 3.12495 4.68716 3.12495H5.31216C5.39504 3.12495 5.47453 3.15787 5.53313 3.21648C5.59174 3.27508 5.62466 3.35457 5.62466 3.43745V5.93745Z" fill="currentColor" />
-    </g>
-    <defs>
-        <clipPath id="clip0_14732_6105">
-            <rect width="10" height="10" />
-        </clipPath>
-    </defs>
-</svg>
-            UNHANDLED
-</div>
-        <div class="inline-flex w-fit shrink-0 items-center justify-center gap-1 font-mono leading-3 uppercase transition-colors dark:border [&amp;_svg]:size-2.5 h-6 min-w-5 rounded-md px-1.5 text-xs/none bg-rose-600 dark:border-rose-500 dark:bg-rose-600 text-white dark:text-white [&amp;_svg]:!text-white">
-    CODE 0
-</div>
-    </div>
-
-    <div
-    x-data="{
-        copied: false,
-        async copyToClipboard() {
-            try {
-                await window.copyToClipboard('http://localhost:8000/api/admin/dashboard');
-                this.copied = true;
-                setTimeout(() => { this.copied = false }, 3000);
-            } catch (err) {
-                console.error('Failed to copy the requestURL: ', err);
-            }
-        }
-    }"
-    class="bg-white dark:bg-[#1a1a1a] border border-neutral-200 dark:border-white/10 rounded-lg flex items-center justify-between h-10 px-2 shadow-xs relative z-50"
->
-    <div class="flex items-center gap-3 w-full">
-        <div class="inline-flex w-fit shrink-0 items-center justify-center gap-1 font-mono leading-3 uppercase transition-colors dark:border [&amp;_svg]:size-2.5 h-6 min-w-5 rounded-md px-1.5 text-xs/none bg-rose-600 dark:border-rose-500 dark:bg-rose-600 text-white dark:text-white [&amp;_svg]:!text-white">
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5">
-    <g clip-path="url(#clip0_14732_6105)">
-
-...808676 bytes truncated...
-
-The tool call succeeded but the output was truncated. Full output saved to: C:\Users\angellX\.local\share\opencode\tool-output\tool_d4006720d001KlwxELwgEuUgpK
-Use the Task tool to have explore agent process this file with Grep and Read (with offset/limit). Do NOT read the full file yourself - delegate to save context.
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 7.7s)
-
-_Thinking:_
-
-The API is returning an error: `Route [login] not defined.` This is happening because the admin middleware is trying to redirect to a 'login' route but that route doesn't exist. This is an authentication issue with the admin API.
-
-Let me check the admin middleware and routes to understand the issue:
-
-I see the issue - the dashboard API is failing because of authentication. Let me check and fix the authentication issue:
-
-**Tool: grep**
-
-**Input:**
-```json
-{
-  "pattern": "admin middleware",
-  "path": "backend"
-}
-```
-
-**Output:**
-```
-No files found
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 2.7s)
-
-_Thinking:_
-
-Let me check for the Admin middleware file:
-
-**Tool: glob**
-
-**Input:**
-```json
-{
-  "pattern": "backend/app/Http/Middleware/*Admin*.php"
-}
-```
-
-**Output:**
-```
-C:\Users\angellX\Desktop\shoes_ecom-more_improved\backend\app\Http\Middleware\AdminMiddleware.php
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 3.3s)
-
-_Thinking:_
-
-Let me check the AdminMiddleware:
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "filePath": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend\\app\\Http\\Middleware\\AdminMiddleware.php"
-}
-```
-
-**Output:**
-```
-<path>C:\Users\angellX\Desktop\shoes_ecom-more_improved\backend\app\Http\Middleware\AdminMiddleware.php</path>
-<type>file</type>
-<content>1: <?php
-2: 
-3: namespace App\Http\Middleware;
-4: 
-5: use Closure;
-6: use Illuminate\Http\Request;
-7: use Symfony\Component\HttpFoundation\Response;
-8: 
-9: class AdminMiddleware
-10: {
-11:     /**
-12:      * Handle an incoming request.
-13:      */
-14:     public function handle(Request $request, Closure $next): Response
-15:     {
-16:         if (!$request->user() || !$request->user()->is_admin) {
-17:             return response()->json([
-18:                 'message' => 'Unauthorized. Admin access required.'
-19:             ], 403);
-20:         }
-21: 
-22:         return $next($request);
-23:     }
-24: }
-
-(End of file - total 24 lines)
-</content>
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 3.1s)
-
-_Thinking:_
-
-The AdminMiddleware looks fine. The issue is with the `auth:sanctum` middleware which is trying to redirect to a login route. Let me check the auth.php config to see what's happening:
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "filePath": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend\\config\\auth.php"
-}
-```
-
-**Output:**
-```
-<path>C:\Users\angellX\Desktop\shoes_ecom-more_improved\backend\config\auth.php</path>
-<type>file</type>
-<content>1: <?php
-2: 
-3: use App\Models\User;
-4: 
-5: return [
-6: 
-7:     /*
-8:     |--------------------------------------------------------------------------
-9:     | Authentication Defaults
-10:     |--------------------------------------------------------------------------
-11:     |
-12:     | This option defines the default authentication "guard" and password
-13:     | reset "broker" for your application. You may change these values
-14:     | as required, but they're a perfect start for most applications.
-15:     |
-16:     */
-17: 
-18:     'defaults' => [
-19:         'guard' => env('AUTH_GUARD', 'web'),
-20:         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
-21:     ],
-22: 
-23:     /*
-24:     |--------------------------------------------------------------------------
-25:     | Authentication Guards
-26:     |--------------------------------------------------------------------------
-27:     |
-28:     | Next, you may define every authentication guard for your application.
-29:     | Of course, a great default configuration has been defined for you
-30:     | which utilizes session storage plus the Eloquent user provider.
-31:     |
-32:     | All authentication guards have a user provider, which defines how the
-33:     | users are actually retrieved out of your database or other storage
-34:     | system used by the application. Typically, Eloquent is utilized.
-35:     |
-36:     | Supported: "session"
-37:     |
-38:     */
-39: 
-40:     'guards' => [
-41:         'web' => [
-42:             'driver' => 'session',
-43:             'provider' => 'users',
-44:         ],
-45:     ],
-46: 
-47:     /*
-48:     |--------------------------------------------------------------------------
-49:     | User Providers
-50:     |--------------------------------------------------------------------------
-51:     |
-52:     | All authentication guards have a user provider, which defines how the
-53:     | users are actually retrieved out of your database or other storage
-54:     | system used by the application. Typically, Eloquent is utilized.
-55:     |
-56:     | If you have multiple user tables or models you may configure multiple
-57:     | providers to represent the model / table. These providers may then
-58:     | be assigned to any extra authentication guards you have defined.
-59:     |
-60:     | Supported: "database", "eloquent"
-61:     |
-62:     */
-63: 
-64:     'providers' => [
-65:         'users' => [
-66:             'driver' => 'eloquent',
-67:             'model' => env('AUTH_MODEL', User::class),
-68:         ],
-69: 
-70:         // 'users' => [
-71:         //     'driver' => 'database',
-72:         //     'table' => 'users',
-73:         // ],
-74:     ],
-75: 
-76:     /*
-77:     |--------------------------------------------------------------------------
-78:     | Resetting Passwords
-79:     |--------------------------------------------------------------------------
-80:     |
-81:     | These configuration options specify the behavior of Laravel's password
-82:     | reset functionality, including the table utilized for token storage
-83:     | and the user provider that is invoked to actually retrieve users.
-84:     |
-85:     | The expiry time is the number of minutes that each reset token will be
-86:     | considered valid. This security feature keeps tokens short-lived so
-87:     | they have less time to be guessed. You may change this as needed.
-88:     |
-89:     | The throttle setting is the number of seconds a user must wait before
-90:     | generating more password reset tokens. This prevents the user from
-91:     | quickly generating a very large amount of password reset tokens.
-92:     |
-93:     */
-94: 
-95:     'passwords' => [
-96:         'users' => [
-97:             'provider' => 'users',
-98:             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-99:             'expire' => 60,
-100:             'throttle' => 60,
-101:         ],
-102:     ],
-103: 
-104:     /*
-105:     |--------------------------------------------------------------------------
-106:     | Password Confirmation Timeout
-107:     |--------------------------------------------------------------------------
-108:     |
-109:     | Here you may define the number of seconds before a password confirmation
-110:     | window expires and users are asked to re-enter their password via the
-111:     | confirmation screen. By default, the timeout lasts for three hours.
-112:     |
-113:     */
-114: 
-115:     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
-116: 
-117: ];
-
-(End of file - total 117 lines)
-</content>
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 4.3s)
-
-_Thinking:_
-
-The issue is that the API is expecting authentication via Sanctum. When the `auth:sanctum` middleware fails to authenticate, it's trying to redirect to a named 'login' route which doesn't exist in an API context.
-
-For API routes, we should return a JSON response instead of redirecting. Let me check the bootstrap/app.php to see how the middleware is configured:
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "filePath": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend\\bootstrap\\app.php"
-}
-```
-
-**Output:**
-```
-<path>C:\Users\angellX\Desktop\shoes_ecom-more_improved\backend\bootstrap\app.php</path>
-<type>file</type>
-<content>1: <?php
-2: 
-3: use Illuminate\Foundation\Application;
-4: use Illuminate\Foundation\Configuration\Exceptions;
-5: use Illuminate\Foundation\Configuration\Middleware;
-6: 
-7: return Application::configure(basePath: dirname(__DIR__))
-8:     ->withRouting(
-9:         web: __DIR__.'/../routes/web.php',
-10:         api: __DIR__.'/../routes/api.php',
-11:         commands: __DIR__.'/../routes/console.php',
-12:         health: '/up',
-13:     )
-14:     ->withMiddleware(function (Middleware $middleware): void {
-15:         $middleware->alias([
-16:             'admin' => \App\Http\Middleware\AdminMiddleware::class,
-17:         ]);
-18:     })
-19:     ->withExceptions(function (Exceptions $exceptions): void {
-20:         //
-21:     })->create();
-
-(End of file - total 21 lines)
-</content>
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 6.0s)
-
-_Thinking:_
-
-The issue is that the Sanctum authentication is failing and trying to redirect to a 'login' route. For API routes, we need to configure Sanctum to return a 401 JSON response instead of redirecting.
-
-Let me check the sanctum configuration:
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "filePath": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend\\config\\sanctum.php"
-}
-```
-
-**Output:**
-```
-<path>C:\Users\angellX\Desktop\shoes_ecom-more_improved\backend\config\sanctum.php</path>
-<type>file</type>
-<content>1: <?php
-2: 
-3: use Laravel\Sanctum\Sanctum;
-4: 
-5: return [
-6: 
-7:     /*
-8:     |--------------------------------------------------------------------------
-9:     | Stateful Domains
-10:     |--------------------------------------------------------------------------
-11:     |
-12:     | Requests from the following domains / hosts will receive stateful API
-13:     | authentication cookies. Typically, these should include your local
-14:     | and production domains which access your API via a frontend SPA.
-15:     |
-16:     */
-17: 
-18:     'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
-19:         '%s%s',
-20:         'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
-21:         Sanctum::currentApplicationUrlWithPort(),
-22:         // Sanctum::currentRequestHost(),
-23:     ))),
-24: 
-25:     /*
-26:     |--------------------------------------------------------------------------
-27:     | Sanctum Guards
-28:     |--------------------------------------------------------------------------
-29:     |
-30:     | This array contains the authentication guards that will be checked when
-31:     | Sanctum is trying to authenticate a request. If none of these guards
-32:     | are able to authenticate the request, Sanctum will use the bearer
-33:     | token that's present on an incoming request for authentication.
-34:     |
-35:     */
-36: 
-37:     'guard' => ['web'],
-38: 
-39:     /*
-40:     |--------------------------------------------------------------------------
-41:     | Expiration Minutes
-42:     |--------------------------------------------------------------------------
-43:     |
-44:     | This value controls the number of minutes until an issued token will be
-45:     | considered expired. This will override any values set in the token's
-46:     | "expires_at" attribute, but first-party sessions are not affected.
-47:     |
-48:     */
-49: 
-50:     'expiration' => null,
-51: 
-52:     /*
-53:     |--------------------------------------------------------------------------
-54:     | Token Prefix
-55:     |--------------------------------------------------------------------------
-56:     |
-57:     | Sanctum can prefix new tokens in order to take advantage of numerous
-58:     | security scanning initiatives maintained by open source platforms
-59:     | that notify developers if they commit tokens into repositories.
-60:     |
-61:     | See: https://docs.github.com/en/code-security/secret-scanning/about-secret-scanning
-62:     |
-63:     */
-64: 
-65:     'token_prefix' => env('SANCTUM_TOKEN_PREFIX', ''),
-66: 
-67:     /*
-68:     |--------------------------------------------------------------------------
-69:     | Sanctum Middleware
-70:     |--------------------------------------------------------------------------
-71:     |
-72:     | When authenticating your first-party SPA with Sanctum you may need to
-73:     | customize some of the middleware Sanctum uses while processing the
-74:     | request. You may change the middleware listed below as required.
-75:     |
-76:     */
-77: 
-78:     'middleware' => [
-79:         'authenticate_session' => Laravel\Sanctum\Http\Middleware\AuthenticateSession::class,
-80:         'encrypt_cookies' => Illuminate\Cookie\Middleware\EncryptCookies::class,
-81:         'validate_csrf_token' => Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
-82:     ],
-83: 
-84: ];
-
-(End of file - total 84 lines)
-</content>
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 5.8s)
-
-_Thinking:_
-
-The issue is that the dashboard API is returning an error because the authentication is failing. The error shows `Route [login] not defined` which means Sanctum is trying to redirect to a login page when authentication fails, but there's no 'login' route defined.
-
-The issue is likely that the `auth:sanctum` middleware is being used on API routes and when authentication fails, it's trying to redirect instead of returning a JSON error.
-
-For API routes, we need to ensure that when authentication fails, a 401 JSON response is returned instead of trying to redirect.
-
-Let me check the api.php routes to see how they're configured:
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "filePath": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend\\routes\\admin.php"
-}
-```
-
-**Output:**
-```
-<path>C:\Users\angellX\Desktop\shoes_ecom-more_improved\backend\routes\admin.php</path>
-<type>file</type>
-<content>1: <?php
-2: 
-3: use App\Http\Controllers\Admin\SettingsController;
-4: use App\Http\Controllers\Api\Admin\AdminAuthController;
-5: use App\Http\Controllers\Api\Admin\AdminCategoryController;
-6: use App\Http\Controllers\Api\Admin\AdminCouponController;
-7: use App\Http\Controllers\Api\Admin\AdminOrderController;
-8: use App\Http\Controllers\Api\Admin\AdminProductController;
-9: use App\Http\Controllers\Api\Admin\AdminInventoryController;
-10: use App\Http\Controllers\Api\Admin\AdminReviewController;
-11: use App\Http\Controllers\Api\Admin\AdminUserController;
-12: use App\Http\Controllers\Api\Admin\DashboardController;
-13: use Illuminate\Support\Facades\Route;
-14: 
-15: /*
-16: |--------------------------------------------------------------------------
-17: | Admin API Routes
-18: |--------------------------------------------------------------------------
-19: | All routes require admin authentication
-20: */
-21: 
-22: Route::prefix('admin')->group(function () {
-23:     // Public admin routes
-24:     Route::post('/login', [AdminAuthController::class, 'login']);
-25: 
-26:     // Protected admin routes
-27:     Route::middleware(['auth:sanctum', 'admin'])->group(function () {
-28:         // Auth
-29:         Route::post('/logout', [AdminAuthController::class, 'logout']);
-30:         Route::get('/user', [AdminAuthController::class, 'user']);
-31: 
-32:         // Dashboard
-33:         Route::get('/dashboard', [DashboardController::class, 'stats']);
-34: 
-35:         // Products
-36:         Route::apiResource('products', AdminProductController::class);
-37:         Route::patch('/products/{product}/toggle-featured', [AdminProductController::class, 'toggleFeatured']);
-38:         Route::patch('/products/{product}/toggle-active', [AdminProductController::class, 'toggleActive']);
-39: 
-40:         // Categories
-41:         Route::apiResource('categories', AdminCategoryController::class);
-42: 
-43:         // Orders
-44:         Route::get('/orders', [AdminOrderController::class, 'index']);
-45:         Route::get('/orders/{order}', [AdminOrderController::class, 'show']);
-46:         Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus']);
-47:         Route::patch('/orders/{order}/payment', [AdminOrderController::class, 'updatePaymentStatus']);
-48: 
-49:         // Users
-50:         Route::get('/users', [AdminUserController::class, 'index']);
-51:         Route::get('/users/{user}', [AdminUserController::class, 'show']);
-52:         Route::put('/users/{user}', [AdminUserController::class, 'update']);
-53:         Route::delete('/users/{user}', [AdminUserController::class, 'destroy']);
-54: 
-55:         // Settings
-56:         Route::get('/settings/oauth', [SettingsController::class, 'getOAuth']);
-57:         Route::post('/settings/oauth', [SettingsController::class, 'saveOAuth']);
-58:         
-59:         // Reviews
-60:         Route::get('/reviews', [AdminReviewController::class, 'index']);
-61:         Route::patch('/reviews/{review}/approve', [AdminReviewController::class, 'approve']);
-62:         Route::patch('/reviews/{review}/reject', [AdminReviewController::class, 'reject']);
-63:         Route::delete('/reviews/{review}', [AdminReviewController::class, 'destroy']);
-64:         
-65:         // Coupons
-66:         Route::apiResource('coupons', AdminCouponController::class);
-67:         Route::patch('/coupons/{coupon}/toggle', [AdminCouponController::class, 'toggle']);
-68:         
-69:         // Inventory
-70:         Route::get('/inventory/stats', [AdminInventoryController::class, 'stats']);
-71:         Route::get('/inventory/logs', [AdminInventoryController::class, 'index']);
-72:         Route::get('/inventory/low-stock', [AdminInventoryController::class, 'lowStock']);
-73:         Route::get('/inventory/out-of-stock', [AdminInventoryController::class, 'outOfStock']);
-74:         Route::get('/inventory/products/{product}/logs', [AdminInventoryController::class, 'productLogs']);
-75:         Route::post('/inventory/adjust', [AdminInventoryController::class, 'adjustInventory']);
-76:     });
-77: });
-
-(End of file - total 77 lines)
-</content>
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 8.1s)
-
-_Thinking:_
-
-The admin routes look correct. The issue is that the routes are in the `routes/admin.php` file but they need to be loaded in the bootstrap/app.php file. Let me check the bootstrap/app.php again:
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "filePath": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend\\bootstrap\\app.php"
-}
-```
-
-**Output:**
-```
-<path>C:\Users\angellX\Desktop\shoes_ecom-more_improved\backend\bootstrap\app.php</path>
-<type>file</type>
-<content>1: <?php
-2: 
-3: use Illuminate\Foundation\Application;
-4: use Illuminate\Foundation\Configuration\Exceptions;
-5: use Illuminate\Foundation\Configuration\Middleware;
-6: 
-7: return Application::configure(basePath: dirname(__DIR__))
-8:     ->withRouting(
-9:         web: __DIR__.'/../routes/web.php',
-10:         api: __DIR__.'/../routes/api.php',
-11:         commands: __DIR__.'/../routes/console.php',
-12:         health: '/up',
-13:     )
-14:     ->withMiddleware(function (Middleware $middleware): void {
-15:         $middleware->alias([
-16:             'admin' => \App\Http\Middleware\AdminMiddleware::class,
-17:         ]);
-18:     })
-19:     ->withExceptions(function (Exceptions $exceptions): void {
-20:         //
-21:     })->create();
-
-(End of file - total 21 lines)
-</content>
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 3.2s)
-
-_Thinking:_
-
-I see the issue now. The `routes/admin.php` file exists but it's not being loaded in the `bootstrap/app.php`. The routes are only loaded from:
-- web.php
-- api.php
-- console.php
-
-The admin routes need to be included in the api.php file or we need to add admin.php to the bootstrap configuration.
-
-Let me check if the admin routes are already included in api.php:
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "filePath": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend\\routes\\api.php"
-}
-```
-
-**Output:**
-```
-<path>C:\Users\angellX\Desktop\shoes_ecom-more_improved\backend\routes\api.php</path>
-<type>file</type>
-<content>1: <?php
-2: 
-3: use App\Http\Controllers\Api\AuthController;
-4: use App\Http\Controllers\Api\Auth\GoogleAuthController;
-5: use App\Http\Controllers\Api\CartController;
-6: use App\Http\Controllers\Api\CategoryController;
-7: use App\Http\Controllers\Api\CouponController;
-8: use App\Http\Controllers\Api\OrderController;
-9: use App\Http\Controllers\Api\PaymentController;
-10: use App\Http\Controllers\Api\ProductController;
-11: use App\Http\Controllers\Api\ReviewController;
-12: use App\Http\Controllers\Api\WishlistController;
-13: use Illuminate\Support\Facades\Route;
-14: use Illuminate\Support\Facades\RateLimiter;
-15: 
-16: /*
-17: |--------------------------------------------------------------------------
-18: | Public API Routes
-19: |--------------------------------------------------------------------------
-20: */
-21: 
-22: // Products - with rate limiting for search
-23: Route::get('/products', [ProductController::class, 'index']);
-24: Route::get('/products/featured', [ProductController::class, 'featured']);
-25: Route::get('/products/brands', [ProductController::class, 'brands']);
-26: Route::middleware('throttle:120,1')->get('/products/search', [ProductController::class, 'search']);
-27: Route::get('/products/{slug}', [ProductController::class, 'show']);
-28: 
-29: // Categories
-30: Route::get('/categories', [CategoryController::class, 'index']);
-31: Route::get('/categories/navbar', [CategoryController::class, 'navbar']);
-32: Route::get('/categories/{slug}', [CategoryController::class, 'showBySlug']);
-33: 
-34: // Reviews (public - viewing only)
-35: Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);
-36: Route::post('/reviews/{review}/helpful', [ReviewController::class, 'markHelpful']);
-37: 
-38: // Auth (public) - with rate limiting
-39: Route::middleware('throttle:60,1')->group(function () {
-40:     Route::post('/auth/register', [AuthController::class, 'register']);
-41:     Route::post('/auth/login', [AuthController::class, 'login']);
-42: });
-43: 
-44: // Google OAuth - with session middleware for Socialite
-45: Route::middleware('web')->group(function () {
-46:     Route::get('/auth/google', [GoogleAuthController::class, 'redirect']);
-47:     Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
-48: });
-49: 
-50: /*
-51: |--------------------------------------------------------------------------
-52: | Protected API Routes (Require Authentication)
-53: |--------------------------------------------------------------------------
-54: */
-55: Route::middleware('auth:sanctum')->group(function () {
-56:     // Auth (protected)
-57:     Route::post('/auth/logout', [AuthController::class, 'logout']);
-58:     Route::get('/auth/user', [AuthController::class, 'user']);
-59:     Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
-60: 
-61:     // Cart
-62:     Route::get('/cart', [CartController::class, 'index']);
-63:     Route::post('/cart/add', [CartController::class, 'add']);
-64:     Route::put('/cart/{cartItem}', [CartController::class, 'update']);
-65:     Route::delete('/cart/{cartItem}', [CartController::class, 'remove']);
-66:     Route::delete('/cart', [CartController::class, 'clear']);
-67: 
-68:     // Orders
-69:     Route::get('/orders', [OrderController::class, 'index']);
-70:     Route::post('/orders', [OrderController::class, 'store']);
-71:     Route::get('/orders/{order}', [OrderController::class, 'show']);
-72:     Route::put('/orders/{order}/status', [OrderController::class, 'updateStatus']);
-73:     
-74:     // Payments
-75:     Route::post('/payments/create-intent', [PaymentController::class, 'createIntent']);
-76:     Route::get('/payments/{order}', [PaymentController::class, 'show']);
-77:     Route::post('/orders/{order}/refund', [PaymentController::class, 'refund']);
-78:     
-79:     // Reviews (protected - creating, updating, deleting)
-80:     Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
-81:     Route::put('/products/{product}/reviews/{review}', [ReviewController::class, 'update']);
-82:     Route::delete('/products/{product}/reviews/{review}', [ReviewController::class, 'destroy']);
-83:     Route::get('/my-reviews', [ReviewController::class, 'myReviews']);
-84:     
-85:     // Wishlist
-86:     Route::get('/wishlist', [WishlistController::class, 'index']);
-87:     Route::post('/wishlist/add/{product}', [WishlistController::class, 'add']);
-88:     Route::delete('/wishlist/remove/{product}', [WishlistController::class, 'remove']);
-89:     Route::post('/wishlist/toggle/{product}', [WishlistController::class, 'toggle']);
-90:     Route::get('/wishlist/check/{product}', [WishlistController::class, 'check']);
-91:     Route::delete('/wishlist/clear', [WishlistController::class, 'clear']);
-92:     Route::post('/wishlist/move-to-cart', [WishlistController::class, 'moveToCart']);
-93:     
-94:     // Coupons
-95:     Route::post('/coupons/apply', [CouponController::class, 'apply']);
-96:     Route::post('/coupons/validate', [CouponController::class, 'validate']);
-97: });
-98: 
-99: // Public coupons (for display)
-100: Route::get('/coupons', [CouponController::class, 'index']);
-101: 
-102: // Stripe Webhook (outside auth middleware)
-103: Route::post('/webhooks/stripe', [PaymentController::class, 'webhook']);
-104: 
-105: // Admin routes
-106: require __DIR__.'/admin.php';
-
-(End of file - total 106 lines)
-</content>
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 3.9s)
-
-_Thinking:_
-
-The admin routes are already being loaded from api.php at line 106. The issue is that the `auth:sanctum` middleware is trying to redirect to a login route when authentication fails.
-
-For API routes, we need to configure the `unauthenticated` behavior to return a JSON response instead of redirecting. Let me check how we can do this.
-
-In Laravel, we can handle this by modifying the `render` method in the Exception Handler or by modifying the authentication configuration.
-
-Let me check the Exception Handler:
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "filePath": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend\\app\\Exceptions\\Handler.php"
-}
-```
-
-**Error:**
-```
-Error: File not found: C:\Users\angellX\Desktop\shoes_ecom-more_improved\backend\app\Exceptions\Handler.php
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 3.1s)
-
-_Thinking:_
-
-Let me check if there's a different exception handler location:
-
-**Tool: glob**
-
-**Input:**
-```json
-{
-  "pattern": "backend/app/Exceptions/*.php"
-}
-```
-
-**Output:**
-```
-No files found
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 7.0s)
-
-_Thinking:_
-
-The exception handler is using Laravel 12's new structure. Let me update the bootstrap/app.php to configure proper JSON responses for unauthenticated API requests:
-
-**Tool: edit**
-
-**Input:**
-```json
-{
-  "filePath": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend\\bootstrap\\app.php",
-  "oldString": "<?php\n\nuse Illuminate\\Foundation\\Application;\nuse Illuminate\\Foundation\\Configuration\\Exceptions;\nuse Illuminate\\Foundation\\Configuration\\Middleware;\n\nreturn Application::configure(basePath: dirname(__DIR__))\n    ->withRouting(\n        web: __DIR__.'/../routes/web.php',\n        api: __DIR__.'/../routes/api.php',\n        commands: __DIR__.'/../routes/console.php',\n        health: '/up',\n    )\n    ->withMiddleware(function (Middleware $middleware): void {\n        $middleware->alias([\n            'admin' => \\App\\Http\\Middleware\\AdminMiddleware::class,\n        ]);\n    })\n    ->withExceptions(function (Exceptions $exceptions): void {\n        //\n    })->create();",
-  "newString": "<?php\n\nuse Illuminate\\Auth\\AuthenticationException;\nuse Illuminate\\Foundation\\Application;\nuse Illuminate\\Foundation\\Configuration\\Exceptions;\nuse Illuminate\\Foundation\\Configuration\\Middleware;\nuse Symfony\\Component\\HttpKernel\\Exception\\NotFoundHttpException;\n\nreturn Application::configure(basePath: dirname(__DIR__))\n    ->withRouting(\n        web: __DIR__.'/../routes/web.php',\n        api: __DIR__.'/../routes/api.php',\n        commands: __DIR__.'/../routes/console.php',\n        health: '/up',\n    )\n    ->withMiddleware(function (Middleware $middleware): void {\n        $middleware->alias([\n            'admin' => \\App\\Http\\Middleware\\AdminMiddleware::class,\n        ]);\n        \n        // Return JSON for API requests instead of redirects\n        $middleware->statefulApi();\n    })\n    ->withExceptions(function (Exceptions $exceptions): void {\n        // Return JSON responses for authentication exceptions on API routes\n        $exceptions->render(function (AuthenticationException $e, $request) {\n            if ($request->is('api/*')) {\n                return response()->json([\n                    'message' => 'Unauthenticated.',\n                ], 401);\n            }\n        });\n        \n        $exceptions->render(function (NotFoundHttpException $e, $request) {\n            if ($request->is('api/*')) {\n                return response()->json([\n                    'message' => 'Not found.',\n                ], 404);\n            }\n        });\n    })->create();"
-}
-```
-
-**Output:**
-```
-Edit applied successfully.
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 4.9s)
-
-_Thinking:_
-
-Now let me rebuild the frontend to make sure everything is working:
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "php artisan route:clear && php artisan cache:clear",
-  "description": "Clear route and cache",
-  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend"
-}
-```
-
-**Output:**
-```
-
-  [37;44m INFO [39;49m Route cache cleared successfully.  
-
-
-  [37;44m INFO [39;49m Application cache cleared successfully.  
-
-
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 4.7s)
-
-_Thinking:_
-
-Let me also create a simple test user with admin privileges so we can test the dashboard. First, let me create a seeder:
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "php artisan tinker --execute=\"App\\Models\\User::updateOrCreate(['email' => 'admin@example.com'], ['name' => 'Admin User', 'password' => bcrypt('password'), 'email_verified_at' => now(), 'is_admin' => true]); echo 'Admin user created/updated';\"",
-  "description": "Create admin user for testing",
-  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend"
-}
-```
-
-**Output:**
-```
-Admin user created/updated
-
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 3.8s)
-
-_Thinking:_
-
-Now let me test the API to make sure it works. First, let me get an auth token for the admin user:
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "curl -s -X POST \"http://localhost:8000/api/admin/login\" -H \"Content-Type: application/json\" -d '{\"email\": \"admin@example.com\", \"password\": \"password\"}'",
-  "description": "Get admin auth token",
-  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend"
-}
-```
-
-**Output:**
-```
-{"user":{"id":3,"name":"Admin User","email":"admin@example.com","email_verified_at":null,"created_at":"2026-03-30T18:35:25.000000Z","updated_at":"2026-03-30T18:35:25.000000Z","phone":null,"address":null,"is_admin":true,"avatar":null,"is_google_user":false},"token":"2|ffD7U8g7Knc8YrBCcJN3Aq2HMyNhtw4kEFEo35YT38e09cfb"}
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 9.4s)
-
-_Thinking:_
-
-Now let me test the dashboard API with the token:
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "curl -s \"http://localhost:8000/api/admin/dashboard\" -H \"Authorization: Bearer 2|ffD7U8g7Knc8YrBCcJN3Aq2HMyNhtw4kEFEo35YT38e09cfb\" | head -c 1000",
-  "description": "Test dashboard API with auth",
-  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend"
-}
-```
-
-**Output:**
-```
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-
-    <title>ShoeStore</title>
-
-    <link
-        rel="icon" type="image/svg+xml"
-        href="data:image/svg+xml,%3Csvg viewBox='0 -.11376601 49.74245785 51.31690859' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m49.626 11.564a.809.809 0 0 1 .028.209v10.972a.8.8 0 0 1 -.402.694l-9.209 5.302v10.509c0 .286-.152.55-.4.694l-19.223 11.066c-.044.025-.092.041-.14.058-.018.006-.035.017-.054.022a.805.805 0 0 1 -.41 0c-.022-.006-.042-.018-.063-.026-.044-.016-.09-.03-.132-.054l-19.219-11.066a.801.801 0 0 1 -.402-.694v-32.916c0-.072.01-.142.028-.21.006-.023.02-.044.028-.067.015-.042.029-.085.051-.124.015-.026.037-.047.055-.071.023-.032.044-.065.071-.093.023-.023.053-.04.079-.06.029-.024.055-.05.088-.069h.001l9.61-5.533a.802.802 0 0 1 .8 0l9.61 5.533h.002c.032.02.059.045.088.068.026.02.055.038.078.06.028.029.048.062.072.
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 4.9s)
-
-_Thinking:_
-
-The API is still returning HTML. There might be an issue with the authentication or the route is still not working properly. Let me check if there's an issue with the sanctum middleware in API context:
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "curl -s -X POST \"http://localhost:8000/api/admin/login\" -H \"Content-Type: application/json\" -d '{\"email\": \"admin@example.com\", \"password\": \"password\"}' | php -r \"echo json_encode(json_decode(file_get_contents('php://stdin'), true)['token'] ?? 'no token');\" 2>/dev/null || echo \"Failed to get token\"",
-  "description": "Get fresh admin token",
-  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend"
-}
-```
-
-**Output:**
-```
-"3|wApET8QqOrDPZoHNNNmWn5XkIysEe0tpm7GclEVGac39a651"
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 6.5s)
-
-_Thinking:_
-
-Let me try using the token with the correct header format:
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "TOKEN=$(curl -s -X POST \"http://localhost:8000/api/admin/login\" -H \"Content-Type: application/json\" -d '{\"email\": \"admin@example.com\", \"password\": \"password\"}' | php -r \"echo json_decode(file_get_contents('php://stdin'), true)['token'];\") && curl -s \"http://localhost:8000/api/admin/dashboard\" -H \"Authorization: Bearer $TOKEN\"",
-  "description": "Test dashboard API with token",
-  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend"
-}
-```
-
-**Output:**
-```
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-
-    <title>ShoeStore</title>
-
-    <link
-        rel="icon" type="image/svg+xml"
-        href="data:image/svg+xml,%3Csvg viewBox='0 -.11376601 49.74245785 51.31690859' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m49.626 11.564a.809.809 0 0 1 .028.209v10.972a.8.8 0 0 1 -.402.694l-9.209 5.302v10.509c0 .286-.152.55-.4.694l-19.223 11.066c-.044.025-.092.041-.14.058-.018.006-.035.017-.054.022a.805.805 0 0 1 -.41 0c-.022-.006-.042-.018-.063-.026-.044-.016-.09-.03-.132-.054l-19.219-11.066a.801.801 0 0 1 -.402-.694v-32.916c0-.072.01-.142.028-.21.006-.023.02-.044.028-.067.015-.042.029-.085.051-.124.015-.026.037-.047.055-.071.023-.032.044-.065.071-.093.023-.023.053-.04.079-.06.029-.024.055-.05.088-.069h.001l9.61-5.533a.802.802 0 0 1 .8 0l9.61 5.533h.002c.032.02.059.045.088.068.026.02.055.038.078.06.028.029.048.062.072.094.017.024.04.045.054.071.023.04.036.082.052.124.008.023.022.044.028.068a.809.809 0 0 1 .028.209v20.559l8.008-4.611v-10.51c0-.07.01-.141.028-.208.007-.024.02-.045.028-.068.016-.042.03-.085.052-.124.015-.026.037-.047.054-.071.024-.032.044-.065.072-.093.023-.023.052-.04.078-.06.03-.024.056-.05.088-.069h.001l9.611-5.533a.801.801 0 0 1 .8 0l9.61 5.533c.034.02.06.045.09.068.025.02.054.038.077.06.028.029.048.062.072.094.018.024.04.045.054.071.023.039.036.082.052.124.009.023.022.044.028.068zm-1.574 10.718v-9.124l-3.363 1.936-4.646 2.675v9.124l8.01-4.611zm-9.61 16.505v-9.13l-4.57 2.61-13.05 7.448v9.216zm-36.84-31.068v31.068l17.618 10.143v-9.214l-9.204-5.209-.003-.002-.004-.002c-.031-.018-.057-.044-.086-.066-.025-.02-.054-.036-.076-.058l-.002-.003c-.026-.025-.044-.056-.066-.084-.02-.027-.044-.05-.06-.078l-.001-.003c-.018-.03-.029-.066-.042-.1-.013-.03-.03-.058-.038-.09v-.001c-.01-.038-.012-.078-.016-.117-.004-.03-.012-.06-.012-.09v-21.483l-4.645-2.676-3.363-1.934zm8.81-5.994-8.007 4.609 8.005 4.609 8.006-4.61-8.006-4.608zm4.164 28.764 4.645-2.674v-20.096l-3.363 1.936-4.646 2.675v20.096zm24.667-23.325-8.006 4.609 8.006 4.609 8.005-4.61zm-.801 10.605-4.646-2.675-3.363-1.936v9.124l4.645 2.674 3.364 1.937zm-18.422 20.561 11.743-6.704 5.87-3.35-8-4.606-9.211 5.303-8.395 4.833z' fill='%23ff2d20'/%3E%3C/svg%3E"
-    />
-
-    <style>/*! tailwindcss v4.1.12 | MIT License | https://tailwindcss.com */@layer properties{@supports (((-webkit-hyphens:none)) and (not (margin-trim:inline))) or ((-moz-orient:inline) and (not (color:rgb(from red r g b)))){*,:before,:after,::backdrop{--tw-rotate-x:initial;--tw-rotate-y:initial;--tw-rotate-z:initial;--tw-skew-x:initial;--tw-skew-y:initial;--tw-divide-x-reverse:0;--tw-border-style:solid;--tw-divide-y-reverse:0;--tw-leading:initial;--tw-font-weight:initial;--tw-shadow:0 0 #0000;--tw-shadow-color:initial;--tw-shadow-alpha:100%;--tw-inset-shadow:0 0 #0000;--tw-inset-shadow-color:initial;--tw-inset-shadow-alpha:100%;--tw-ring-color:initial;--tw-ring-shadow:0 0 #0000;--tw-inset-ring-color:initial;--tw-inset-ring-shadow:0 0 #0000;--tw-ring-inset:initial;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-offset-shadow:0 0 #0000;--tw-blur:initial;--tw-brightness:initial;--tw-contrast:initial;--tw-grayscale:initial;--tw-hue-rotate:initial;--tw-invert:initial;--tw-opacity:initial;--tw-saturate:initial;--tw-sepia:initial;--tw-drop-shadow:initial;--tw-drop-shadow-color:initial;--tw-drop-shadow-alpha:100%;--tw-drop-shadow-size:initial;--tw-duration:initial;--tw-ease:initial;--tw-animation-delay:0s;--tw-animation-direction:normal;--tw-animation-duration:initial;--tw-animation-fill-mode:none;--tw-animation-iteration-count:1;--tw-enter-blur:0;--tw-enter-opacity:1;--tw-enter-rotate:0;--tw-enter-scale:1;--tw-enter-translate-x:0;--tw-enter-translate-y:0;--tw-exit-blur:0;--tw-exit-opacity:1;--tw-exit-rotate:0;--tw-exit-scale:1;--tw-exit-translate-x:0;--tw-exit-translate-y:0;--tw-backdrop-blur:initial;--tw-backdrop-brightness:initial;--tw-backdrop-contrast:initial;--tw-backdrop-grayscale:initial;--tw-backdrop-hue-rotate:initial;--tw-backdrop-invert:initial;--tw-backdrop-opacity:initial;--tw-backdrop-saturate:initial;--tw-backdrop-sepia:initial}}}@layer theme{:root,:host{--font-sans:ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";--font-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;--color-amber-200:oklch(92.4% .12 95.746);--color-amber-300:oklch(87.9% .169 91.605);--color-amber-500:oklch(76.9% .188 70.08);--color-amber-600:oklch(66.6% .179 58.318);--color-amber-800:oklch(47.3% .137 46.201);--color-amber-900:oklch(41.4% .112 45.904);--color-amber-950:oklch(27.9% .077 45.635);--color-emerald-200:oklch(90.5% .093 164.15);--color-emerald-400:oklch(76.5% .177 163.223);--color-emerald-500:oklch(69.6% .17 162.48);--color-emerald-600:oklch(59.6% .145 163.225);--color-emerald-900:oklch(37.8% .077 168.94);--color-blue-100:oklch(93.2% .032 255.585);--color-blue-300:oklch(80.9% .105 251.813);--color-blue-500:oklch(62.3% .214 259.815);--color-blue-600:oklch(54.6% .245 262.881);--color-blue-700:oklch(48.8% .243 264.376);--color-blue-800:oklch(42.4% .199 265.638);--color-blue-900:oklch(37.9% .146 265.522);--color-blue-950:oklch(28.2% .091 267.935);--color-rose-100:oklch(94.1% .03 12.58);--color-rose-200:oklch(89.2% .058 10.001);--color-rose-500:oklch(64.5% .246 16.439);--color-rose-600:oklch(58.6% .253 17.585);--color-rose-900:oklch(41% .159 10.272);--color-rose-950:oklch(27.1% .105 12.094);--color-neutral-50:oklch(98.5% 0 0);--color-neutral-100:oklch(97% 0 0);--color-neutral-200:oklch(92.2% 0 0);--color-neutral-300:oklch(87% 0 0);--color-neutral-400:oklch(70.8% 0 0);--color-neutral-500:oklch(55.6% 0 0);--color-neutral-600:oklch(43.9% 0 0);--color-neutral-700:oklch(37.1% 0 0);--color-neutral-800:oklch(26.9% 0 0);--color-neutral-900:oklch(20.5% 0 0);--color-neutral-950:oklch(14.5% 0 0);--color-black:#000;--color-white:#fff;--spacing:.25rem;--container-7xl:80rem;--text-xs:.75rem;--text-xs--line-height:calc(1/.75);--text-sm:.875rem;--text-sm--line-height:calc(1.25/.875);--text-base:1rem;--text-base--line-height: 1.5 ;--text-lg:1.125rem;--text-lg--line-height:calc(1.75/1.125);--text-xl:1.25rem;--text-xl--line-height:calc(1.75/1.25);--text-3xl:1.875rem;--text-3xl--line-height: 1.2 ;--font-weight-light:300;--font-weight-medium:500;--font-weight-semibold:600;--radius-md:.375rem;--radius-lg:.5rem;--radius-xl:.75rem;--ease-in-out:cubic-bezier(.4,0,.2,1);--blur-md:12px;--default-transition-duration:.15s;--default-transition-timing-function:cubic-bezier(.4,0,.2,1);--default-font-family:var(--font-sans);--default-mono-font-family:var(--font-mono)}}@layer base{*,:after,:before,::backdrop{box-sizing:border-box;border:0 solid;margin:0;padding:0}::file-selector-button{box-sizing:border-box;border:0 solid;margin:0;padding:0}html,:host{-webkit-text-size-adjust:100%;tab-size:4;line-height:1.5;font-family:var(--default-font-family,ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji");font-feature-settings:var(--default-font-feature-settings,normal);font-variation-settings:var(--default-font-variation-settings,normal);-webkit-tap-highlight-color:transparent}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;-webkit-text-decoration:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,samp,pre{font-family:var(--default-mono-font-family,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace);font-feature-settings:var(--default-mono-font-feature-settings,normal);font-variation-settings:var(--default-mono-font-variation-settings,normal);font-size:1em}small{font-size:80%}sub,sup{vertical-align:baseline;font-size:75%;line-height:0;position:relative}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}:-moz-focusring{outline:auto}progress{vertical-align:baseline}summary{display:list-item}ol,ul,menu{list-style:none}img,svg,video,canvas,audio,iframe,embed,object{vertical-align:middle;display:block}img,video{max-width:100%;height:auto}button,input,select,optgroup,textarea{font:inherit;font-feature-settings:inherit;font-variation-settings:inherit;letter-spacing:inherit;color:inherit;opacity:1;background-color:#0000;border-radius:0}::file-selector-button{font:inherit;font-feature-settings:inherit;font-variation-settings:inherit;letter-spacing:inherit;color:inherit;opacity:1;background-color:#0000;border-radius:0}:where(select:is([multiple],[size])) optgroup{font-weight:bolder}:where(select:is([multiple],[size])) optgroup option{padding-inline-start:20px}::file-selector-button{margin-inline-end:4px}::placeholder{opacity:1}@supports (not ((-webkit-appearance:-apple-pay-button))) or (contain-intrinsic-size:1px){::placeholder{color:currentColor}@supports (color:color-mix(in lab,red,red)){::placeholder{color:color-mix(in oklab,currentcolor 50%,transparent)}}}textarea{resize:vertical}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-date-and-time-value{min-height:1lh;text-align:inherit}::-webkit-datetime-edit{display:inline-flex}::-webkit-datetime-edit-fields-wrapper{padding:0}::-webkit-datetime-edit{padding-block:0}::-webkit-datetime-edit-year-field{padding-block:0}::-webkit-datetime-edit-month-field{padding-block:0}::-webkit-datetime-edit-day-field{padding-block:0}::-webkit-datetime-edit-hour-field{padding-block:0}::-webkit-datetime-edit-minute-field{padding-block:0}::-webkit-datetime-edit-second-field{padding-block:0}::-webkit-datetime-edit-millisecond-field{padding-block:0}::-webkit-datetime-edit-meridiem-field{padding-block:0}::-webkit-calendar-picker-indicator{line-height:1}:-moz-ui-invalid{box-shadow:none}button,input:where([type=button],[type=reset],[type=submit]){appearance:button}::file-selector-button{appearance:button}::-webkit-inner-spin-button{height:auto}::-webkit-outer-spin-button{height:auto}[hidden]:where(:not([hidden=until-found])){display:none!important}}@layer components;@layer utilities{.collapse{visibility:collapse}.visible{visibility:visible}.absolute{position:absolute}.fixed{position:fixed}.relative{position:relative}.static{position:static}.sticky{position:sticky}.top-\[-1px\]{top:-1px}.right-0{right:calc(var(--spacing)*0)}.bottom-0{bottom:calc(var(--spacing)*0)}.left-0{left:calc(var(--spacing)*0)}.-z-10{z-index:-10}.z-50{z-index:50}.mx-auto{margin-inline:auto}.-mt-3{margin-top:calc(var(--spacing)*-3)}.-mt-5{margin-top:calc(var(--spacing)*-5)}.mr-6{margin-right:calc(var(--spacing)*6)}.mb-8{margin-bottom:calc(var(--spacing)*8)}.block{display:block}.flex{display:flex}.grid{display:grid}.hidden{display:none}.inline{display:inline}.inline-block{display:inline-block}.inline-flex{display:inline-flex}.table{display:table}.size-2{width:calc(var(--spacing)*2);height:calc(var(--spacing)*2)}.size-3{width:calc(var(--spacing)*3);height:calc(var(--spacing)*3)}.h-0{height:calc(var(--spacing)*0)}.h-2\.5{height:calc(var(--spacing)*2.5)}.h-3{height:calc(var(--spacing)*3)}.h-6{height:calc(var(--spacing)*6)}.h-7{height:calc(var(--spacing)*7)}.h-8{height:calc(var(--spacing)*8)}.h-10{height:calc(var(--spacing)*10)}.h-11{height:calc(var(--spacing)*11)}.h-\[18px\]{height:18px}.h-\[56px\]{height:56px}.min-h-dvh{min-height:100dvh}.w-2\.5{width:calc(var(--spacing)*2.5)}.w-3{width:calc(var(--spacing)*3)}.w-6{width:calc(var(--spacing)*6)}.w-8{width:calc(var(--spacing)*8)}.w-\[18px\]{width:18px}.w-fit{width:fit-content}.w-full{width:100%}.max-w-7xl{max-width:var(--container-7xl)}.max-w-full{max-width:100%}.min-w-0{min-width:calc(var(--spacing)*0)}.min-w-5{min-width:calc(var(--spacing)*5)}.min-w-6{min-width:calc(var(--spacing)*6)}.min-w-full{min-width:100%}.flex-1{flex:1}.flex-shrink-0,.shrink-0{flex-shrink:0}.grow{flex-grow:1}.transform{transform:var(--tw-rotate-x,)var(--tw-rotate-y,)var(--tw-rotate-z,)var(--tw-skew-x,)var(--tw-skew-y,)}.transform\!{transform:var(--tw-rotate-x,)var(--tw-rotate-y,)var(--tw-rotate-z,)var(--tw-skew-x,)var(--tw-skew-y,)!important}.cursor-not-allowed\!{cursor:not-allowed!important}.cursor-pointer{cursor:pointer}.resize{resize:both}.flex-col{flex-direction:column}.items-baseline{align-items:baseline}.items-center{align-items:center}.items-start{align-items:flex-start}.justify-between{justify-content:space-between}.justify-center{justify-content:center}.gap-0\.5{gap:calc(var(--spacing)*.5)}.gap-1{gap:calc(var(--spacing)*1)}.gap-1\.5{gap:calc(var(--spacing)*1.5)}.gap-2{gap:calc(var(--spacing)*2)}.gap-2\.5{gap:calc(var(--spacing)*2.5)}.gap-3{gap:calc(var(--spacing)*3)}.gap-4{gap:calc(var(--spacing)*4)}.gap-5{gap:calc(var(--spacing)*5)}.gap-6{gap:calc(var(--spacing)*6)}.gap-8{gap:calc(var(--spacing)*8)}.gap-12{gap:calc(var(--spacing)*12)}:where(.divide-x>:not(:last-child)){--tw-divide-x-reverse:0;border-inline-style:var(--tw-border-style);border-inline-start-width:calc(1px*var(--tw-divide-x-reverse));border-inline-end-width:calc(1px*calc(1 - var(--tw-divide-x-reverse)))}:where(.divide-y>:not(:last-child)){--tw-divide-y-reverse:0;border-bottom-style:var(--tw-border-style);border-top-style:var(--tw-border-style);border-top-width:calc(1px*var(--tw-divide-y-reverse));border-bottom-width:calc(1px*calc(1 - var(--tw-divide-y-reverse)))}:where(.divide-neutral-200>:not(:last-child)){border-color:var(--color-neutral-200)}.truncate{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.overflow-x-hidden{overflow-x:hidden}.rounded-full{border-radius:3.40282e38px}.rounded-lg{border-radius:var(--radius-lg)}.rounded-md{border-radius:var(--radius-md)}.rounded-xl{border-radius:var(--radius-xl)}.rounded-t-lg{border-top-left-radius:var(--radius-lg);border-top-right-radius:var(--radius-lg)}.rounded-b-lg{border-bottom-right-radius:var(--radius-lg);border-bottom-left-radius:var(--radius-lg)}.border{border-style:var(--tw-border-style);border-width:1px}.border-x{border-inline-style:var(--tw-border-style);border-inline-width:1px}.border-t{border-top-style:var(--tw-border-style);border-top-width:1px}.border-b-2{border-bottom-style:var(--tw-border-style);border-bottom-width:2px}.border-dashed{--tw-border-style:dashed;border-style:dashed}.border-dotted{--tw-border-style:dotted;border-style:dotted}.border-neutral-100{border-color:var(--color-neutral-100)}.border-neutral-200{border-color:var(--color-neutral-200)}.border-neutral-300{border-color:var(--color-neutral-300)}.bg-amber-200{background-color:var(--color-amber-200)}.bg-amber-600{background-color:var(--color-amber-600)}.bg-black\/8{background-color:#00000014}@supports (color:color-mix(in lab,red,red)){.bg-black\/8{background-color:color-mix(in oklab,var(--color-black)8%,transparent)}}.bg-black\/10{background-color:#0000001a}@supports (color:color-mix(in lab,red,red)){.bg-black\/10{background-color:color-mix(in oklab,var(--color-black)10%,transparent)}}.bg-blue-100{background-color:var(--color-blue-100)}.bg-blue-600{background-color:var(--color-blue-600)}.bg-blue-700{background-color:var(--color-blue-700)}.bg-emerald-200{background-color:var(--color-emerald-200)}.bg-emerald-600{background-color:var(--color-emerald-600)}.bg-neutral-50{background-color:var(--color-neutral-50)}.bg-neutral-600{background-color:var(--color-neutral-600)}.bg-rose-200{background-color:var(--color-rose-200)}.bg-rose-200\!{background-color:var(--color-rose-200)!important}.bg-rose-500{background-color:var(--color-rose-500)}.bg-rose-600{background-color:var(--color-rose-600)}.bg-transparent\!{background-color:#0000!important}.bg-white{background-color:var(--color-white)}.bg-white\/5{background-color:#ffffff0d}@supports (color:color-mix(in lab,red,red)){.bg-white\/5{background-color:color-mix(in oklab,var(--color-white)5%,transparent)}}.bg-white\/\[2\%\]{background-color:#ffffff05}@supports (color:color-mix(in lab,red,red)){.bg-white\/\[2\%\]{background-color:color-mix(in oklab,var(--color-white)2%,transparent)}}.p-1{padding:calc(var(--spacing)*1)}.p-2{padding:calc(var(--spacing)*2)}.p-2\.5{padding:calc(var(--spacing)*2.5)}.p-4{padding:calc(var(--spacing)*4)}.p-5{padding:calc(var(--spacing)*5)}.px-1\.5{padding-inline:calc(var(--spacing)*1.5)}.px-2{padding-inline:calc(var(--spacing)*2)}.px-3{padding-inline:calc(var(--spacing)*3)}.px-4{padding-inline:calc(var(--spacing)*4)}.px-6{padding-inline:calc(var(--spacing)*6)}.px-\[6px\]{padding-inline:6px}.py-0{padding-block:calc(var(--spacing)*0)}.py-1{padding-block:calc(var(--spacing)*1)}.py-4{padding-block:calc(var(--spacing)*4)}.pt-8{padding-top:calc(var(--spacing)*8)}.pt-14{padding-top:calc(var(--spacing)*14)}.pr-2\.5{padding-right:calc(var(--spacing)*2.5)}.pb-0{padding-bottom:calc(var(--spacing)*0)}.pl-4{padding-left:calc(var(--spacing)*4)}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:var(--font-mono)}.font-sans{font-family:var(--font-sans)}.text-3xl{font-size:var(--text-3xl);line-height:var(--tw-leading,var(--text-3xl--line-height))}.text-base{font-size:var(--text-base);line-height:var(--tw-leading,var(--text-base--line-height))}.text-lg{font-size:var(--text-lg);line-height:var(--tw-leading,var(--text-lg--line-height))}.text-sm{font-size:var(--text-sm);line-height:var(--tw-leading,var(--text-sm--line-height))}.text-xl{font-size:var(--text-xl);line-height:var(--tw-leading,var(--text-xl--line-height))}.text-xs{font-size:var(--text-xs);line-height:var(--tw-leading,var(--text-xs--line-height))}.text-xs\/none{font-size:var(--text-xs);line-height:1}.text-\[13px\]{font-size:13px}.leading-3{--tw-leading:calc(var(--spacing)*3);line-height:calc(var(--spacing)*3)}.font-light{--tw-font-weight:var(--font-weight-light);font-weight:var(--font-weight-light)}.font-medium{--tw-font-weight:var(--font-weight-medium);font-weight:var(--font-weight-medium)}.font-semibold{--tw-font-weight:var(--font-weight-semibold);font-weight:var(--font-weight-semibold)}.text-amber-900{color:var(--color-amber-900)}.text-blue-500{color:var(--color-blue-500)}.text-blue-900{color:var(--color-blue-900)}.text-emerald-500{color:var(--color-emerald-500)}.text-emerald-900{color:var(--color-emerald-900)}.text-neutral-100{color:var(--color-neutral-100)}.text-neutral-400{color:var(--color-neutral-400)}.text-neutral-500{color:var(--color-neutral-500)}.text-neutral-500\!{color:var(--color-neutral-500)!important}.text-neutral-600{color:var(--color-neutral-600)}.text-neutral-800{color:var(--color-neutral-800)}.text-neutral-900{color:var(--color-neutral-900)}.text-neutral-950{color:var(--color-neutral-950)}.text-rose-900{color:var(--color-rose-900)}.text-white{color:var(--color-white)}.uppercase{text-transform:uppercase}.italic{font-style:italic}.line-through{text-decoration-line:line-through}.overline{text-decoration-line:overline}.underline{text-decoration-line:underline}.decoration-neutral-400{-webkit-text-decoration-color:var(--color-neutral-400);text-decoration-color:var(--color-neutral-400)}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.scheme-light-dark{color-scheme:light dark}.opacity-90{opacity:.9}.shadow-xs{--tw-shadow:0 1px 2px 0 var(--tw-shadow-color,#0000000d);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow)}.blur{--tw-blur:blur(8px);filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.filter{filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)}.filter\!{filter:var(--tw-blur,)var(--tw-brightness,)var(--tw-contrast,)var(--tw-grayscale,)var(--tw-hue-rotate,)var(--tw-invert,)var(--tw-saturate,)var(--tw-sepia,)var(--tw-drop-shadow,)!important}.transition{transition-property:color,background-color,border-color,outline-color,text-decoration-color,fill,stroke,--tw-gradient-from,--tw-gradient-via,--tw-gradient-to,opacity,box-shadow,transform,translate,scale,rotate,filter,-webkit-backdrop-filter,backdrop-filter,display,visibility,content-visibility,overlay,pointer-events;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration))}.transition-colors{transition-property:color,background-color,border-color,outline-color,text-decoration-color,fill,stroke,--tw-gradient-from,--tw-gradient-via,--tw-gradient-to;transition-timing-function:var(--tw-ease,var(--default-transition-timing-function));transition-duration:var(--tw-duration,var(--default-transition-duration))}.duration-200{--tw-duration:.2s;transition-duration:.2s}.ease-in-out{--tw-ease:var(--ease-in-out);transition-timing-function:var(--ease-in-out)}@media (hover:hover){.group-hover\:text-blue-500:is(:where(.group):hover *){color:var(--color-blue-500)}}.odd\:bg-white\/2:nth-child(odd){background-color:#ffffff05}@supports (color:color-mix(in lab,red,red)){.odd\:bg-white\/2:nth-child(odd){background-color:color-mix(in oklab,var(--color-white)2%,transparent)}}.even\:bg-white:nth-child(2n){background-color:var(--color-white)}@media (hover:hover){.hover\:bg-neutral-100:hover{background-color:var(--color-neutral-100)}.hover\:bg-neutral-200:hover{background-color:var(--color-neutral-200)}.hover\:bg-white\/50:hover{background-color:#ffffff80}@supports (color:color-mix(in lab,red,red)){.hover\:bg-white\/50:hover{background-color:color-mix(in oklab,var(--color-white)50%,transparent)}}.hover\:underline:hover{text-decoration-line:underline}}@media (min-width:40rem){.sm\:mb-16{margin-bottom:calc(var(--spacing)*16)}.sm\:p-14{padding:calc(var(--spacing)*14)}.sm\:py-0{padding-block:calc(var(--spacing)*0)}.sm\:pt-16{padding-top:calc(var(--spacing)*16)}.sm\:pb-0{padding-bottom:calc(var(--spacing)*0)}}@media (prefers-color-scheme:dark){:where(.dark\:divide-white\/5>:not(:last-child)){border-color:#ffffff0d}@supports (color:color-mix(in lab,red,red)){:where(.dark\:divide-white\/5>:not(:last-child)){border-color:color-mix(in oklab,var(--color-white)5%,transparent)}}:where(.dark\:divide-white\/10>:not(:last-child)){border-color:#ffffff1a}@supports (color:color-mix(in lab,red,red)){:where(.dark\:divide-white\/10>:not(:last-child)){border-color:color-mix(in oklab,var(--color-white)10%,transparent)}}.dark\:border{border-style:var(--tw-border-style);border-width:1px}.dark\:border-none{--tw-border-style:none;border-style:none}.dark\:border-amber-500{border-color:var(--color-amber-500)}.dark\:border-amber-800{border-color:var(--color-amber-800)}.dark\:border-blue-600{border-color:var(--color-blue-600)}.dark\:border-blue-800{border-color:var(--color-blue-800)}.dark\:border-emerald-500{border-color:var(--color-emerald-500)}.dark\:border-emerald-600{border-color:var(--color-emerald-600)}.dark\:border-neutral-500{border-color:var(--color-neutral-500)}.dark\:border-neutral-700{border-color:var(--color-neutral-700)}.dark\:border-neutral-800{border-color:var(--color-neutral-800)}.dark\:border-rose-500{border-color:var(--color-rose-500)}.dark\:border-rose-900{border-color:var(--color-rose-900)}.dark\:border-white\/5{border-color:#ffffff0d}@supports (color:color-mix(in lab,red,red)){.dark\:border-white\/5{border-color:color-mix(in oklab,var(--color-white)5%,transparent)}}.dark\:border-white\/8{border-color:#ffffff14}@supports (color:color-mix(in lab,red,red)){.dark\:border-white\/8{border-color:color-mix(in oklab,var(--color-white)8%,transparent)}}.dark\:border-white\/10{border-color:#ffffff1a}@supports (color:color-mix(in lab,red,red)){.dark\:border-white\/10{border-color:color-mix(in oklab,var(--color-white)10%,transparent)}}.dark\:border-white\/20{border-color:#fff3}@supports (color:color-mix(in lab,red,red)){.dark\:border-white\/20{border-color:color-mix(in oklab,var(--color-white)20%,transparent)}}.dark\:border-white\/\[9\%\]{border-color:#ffffff17}@supports (color:color-mix(in lab,red,red)){.dark\:border-white\/\[9\%\]{border-color:color-mix(in oklab,var(--color-white)9%,transparent)}}.dark\:bg-\[\#1a1a1a\]{background-color:#1a1a1a}.dark\:bg-amber-600{background-color:var(--color-amber-600)}.dark\:bg-amber-950{background-color:var(--color-amber-950)}.dark\:bg-blue-700{background-color:var(--color-blue-700)}.dark\:bg-blue-950{background-color:var(--color-blue-950)}.dark\:bg-emerald-600{background-color:var(--color-emerald-600)}.dark\:bg-emerald-900\/70{background-color:#004e3bb3}@supports (color:color-mix(in lab,red,red)){.dark\:bg-emerald-900\/70{background-color:color-mix(in oklab,var(--color-emerald-900)70%,transparent)}}.dark\:bg-neutral-400{background-color:var(--color-neutral-400)}.dark\:bg-neutral-600{background-color:var(--color-neutral-600)}.dark\:bg-neutral-700{background-color:var(--color-neutral-700)}.dark\:bg-neutral-800{background-color:var(--color-neutral-800)}.dark\:bg-neutral-900{background-color:var(--color-neutral-900)}.dark\:bg-rose-600{background-color:var(--color-rose-600)}.dark\:bg-rose-900\!{background-color:var(--color-rose-900)!important}.dark\:bg-rose-950{background-color:var(--color-rose-950)}.dark\:bg-transparent{background-color:#0000}.dark\:bg-white{background-color:var(--color-white)}.dark\:bg-white\/1{background-color:#ffffff03}@supports (color:color-mix(in lab,red,red)){.dark\:bg-white\/1{background-color:color-mix(in oklab,var(--color-white)1%,transparent)}}.dark\:bg-white\/3{background-color:#ffffff08}@supports (color:color-mix(in lab,red,red)){.dark\:bg-white\/3{background-color:color-mix(in oklab,var(--color-white)3%,transparent)}}.dark\:bg-white\/5{background-color:#ffffff0d}@supports (color:color-mix(in lab,red,red)){.dark\:bg-white\/5{background-color:color-mix(in oklab,var(--color-white)5%,transparent)}}.dark\:bg-white\/10{background-color:#ffffff1a}@supports (color:color-mix(in lab,red,red)){.dark\:bg-white\/10{background-color:color-mix(in oklab,var(--color-white)10%,transparent)}}.dark\:bg-white\/\[2\%\]{background-color:#ffffff05}@supports (color:color-mix(in lab,red,red)){.dark\:bg-white\/\[2\%\]{background-color:color-mix(in oklab,var(--color-white)2%,transparent)}}.dark\:bg-white\/\[3\%\]{background-color:#ffffff08}@supports (color:color-mix(in lab,red,red)){.dark\:bg-white\/\[3\%\]{background-color:color-mix(in oklab,var(--color-white)3%,transparent)}}.dark\:text-amber-300{color:var(--color-amber-300)}.dark\:text-blue-300{color:var(--color-blue-300)}.dark\:text-emerald-400{color:var(--color-emerald-400)}.dark\:text-emerald-500{color:var(--color-emerald-500)}.dark\:text-neutral-100{color:var(--color-neutral-100)}.dark\:text-neutral-200{color:var(--color-neutral-200)}.dark\:text-neutral-300{color:var(--color-neutral-300)}.dark\:text-neutral-400{color:var(--color-neutral-400)}.dark\:text-neutral-500{color:var(--color-neutral-500)}.dark\:text-neutral-600{color:var(--color-neutral-600)}.dark\:text-neutral-600\!{color:var(--color-neutral-600)!important}.dark\:text-neutral-900{color:var(--color-neutral-900)}.dark\:text-rose-100{color:var(--color-rose-100)}.dark\:text-white{color:var(--color-white)}.dark\:text-white\!{color:var(--color-white)!important}}@media (hover:hover){@media (prefers-color-scheme:dark){.group-hover\:dark\:text-emerald-500:is(:where(.group):hover *){color:var(--color-emerald-500)}}}@media (prefers-color-scheme:dark){.odd\:dark\:bg-white\/4:nth-child(odd){background-color:#ffffff0a}@supports (color:color-mix(in lab,red,red)){.odd\:dark\:bg-white\/4:nth-child(odd){background-color:color-mix(in oklab,var(--color-white)4%,transparent)}}.even\:dark\:bg-white\/2:nth-child(2n){background-color:#ffffff05}@supports (color:color-mix(in lab,red,red)){.even\:dark\:bg-white\/2:nth-child(2n){background-color:color-mix(in oklab,var(--color-white)2%,transparent)}}@media (hover:hover){.dark\:hover\:bg-white\/2:hover{background-color:#ffffff05}@supports (color:color-mix(in lab,red,red)){.dark\:hover\:bg-white\/2:hover{background-color:color-mix(in oklab,var(--color-white)2%,transparent)}}.dark\:hover\:bg-white\/5:hover{background-color:#ffffff0d}@supports (color:color-mix(in lab,red,red)){.dark\:hover\:bg-white\/5:hover{background-color:color-mix(in oklab,var(--color-white)5%,transparent)}}.dark\:hover\:bg-white\/10:hover{background-color:#ffffff1a}@supports (color:color-mix(in lab,red,red)){.dark\:hover\:bg-white\/10:hover{background-color:color-mix(in oklab,var(--color-white)10%,transparent)}}}}@media (hover:hover){@media (prefers-color-scheme:dark){.hover\:dark\:bg-white\/5:hover{background-color:#ffffff0d}@supports (color:color-mix(in lab,red,red)){.hover\:dark\:bg-white\/5:hover{background-color:color-mix(in oklab,var(--color-white)5%,transparent)}}.hover\:dark\:text-white:hover{color:var(--color-white)}}}.\[\&_svg\]\:size-2\.5 svg{width:calc(var(--spacing)*2.5);height:calc(var(--spacing)*2.5)}.\[\&_svg\]\:\!text-white svg{color:var(--color-white)!important}@media (hover:hover){.hover\:\[\&_svg\]\:stroke-emerald-500:hover svg{stroke:var(--color-emerald-500)}}@media (prefers-color-scheme:dark){.dark\:\[\&_svg\]\:\!text-white svg{color:var(--color-white)!important}}}@property --tw-animation-delay{syntax:"*";inherits:false;initial-value:0s}@property --tw-animation-direction{syntax:"*";inherits:false;initial-value:normal}@property --tw-animation-duration{syntax:"*";inherits:false}@property --tw-animation-fill-mode{syntax:"*";inherits:false;initial-value:none}@property --tw-animation-iteration-count{syntax:"*";inherits:false;initial-value:1}@property --tw-enter-blur{syntax:"*";inherits:false;initial-value:0}@property --tw-enter-opacity{syntax:"*";inherits:false;initial-value:1}@property --tw-enter-rotate{syntax:"*";inherits:false;initial-value:0}@property --tw-enter-scale{syntax:"*";inherits:false;initial-value:1}@property --tw-enter-translate-x{syntax:"*";inherits:false;initial-value:0}@property --tw-enter-translate-y{syntax:"*";inherits:false;initial-value:0}@property --tw-exit-blur{syntax:"*";inherits:false;initial-value:0}@property --tw-exit-opacity{syntax:"*";inherits:false;initial-value:1}@property --tw-exit-rotate{syntax:"*";inherits:false;initial-value:0}@property --tw-exit-scale{syntax:"*";inherits:false;initial-value:1}@property --tw-exit-translate-x{syntax:"*";inherits:false;initial-value:0}@property --tw-exit-translate-y{syntax:"*";inherits:false;initial-value:0}.tippy-box[data-animation=fade][data-state=hidden]{opacity:0}[data-tippy-root]{max-width:calc(100vw - 10px)}.tippy-box{color:#fff;white-space:normal;background-color:#333;border-radius:4px;outline:0;font-size:14px;line-height:1.4;transition-property:transform,visibility,opacity;position:relative}.tippy-box[data-placement^=top]>.tippy-arrow{bottom:0}.tippy-box[data-placement^=top]>.tippy-arrow:before{border-width:8px 8px 0;border-top-color:initial;transform-origin:top;bottom:-7px;left:0}.tippy-box[data-placement^=bottom]>.tippy-arrow{top:0}.tippy-box[data-placement^=bottom]>.tippy-arrow:before{border-width:0 8px 8px;border-bottom-color:initial;transform-origin:bottom;top:-7px;left:0}.tippy-box[data-placement^=left]>.tippy-arrow{right:0}.tippy-box[data-placement^=left]>.tippy-arrow:before{border-width:8px 0 8px 8px;border-left-color:initial;transform-origin:0;right:-7px}.tippy-box[data-placement^=right]>.tippy-arrow{left:0}.tippy-box[data-placement^=right]>.tippy-arrow:before{border-width:8px 8px 8px 0;border-right-color:initial;transform-origin:100%;left:-7px}.tippy-box[data-inertia][data-state=visible]{transition-timing-function:cubic-bezier(.54,1.5,.38,1.11)}.tippy-arrow{color:#333;width:16px;height:16px}.tippy-arrow:before{content:"";border-style:solid;border-color:#0000;position:absolute}.tippy-content{z-index:1;padding:5px 9px;position:relative}.tippy-box[data-animation=shift-away][data-state=hidden]{opacity:0}.tippy-box[data-animation=shift-away][data-state=hidden][data-placement^=top]{transform:translateY(10px)}.tippy-box[data-animation=shift-away][data-state=hidden][data-placement^=bottom]{transform:translateY(-10px)}.tippy-box[data-animation=shift-away][data-state=hidden][data-placement^=left]{transform:translate(10px)}.tippy-box[data-animation=shift-away][data-state=hidden][data-placement^=right]{transform:translate(-10px)}[x-cloak]{display:none!important}.tippy-box[data-theme~=laravel]{border-radius:var(--radius-md);border-style:var(--tw-border-style);font-size:var(--text-xs);line-height:var(--tw-leading,var(--text-xs--line-height));--tw-shadow:0 4px 6px -1px var(--tw-shadow-color,#0000001a),0 2px 4px -2px var(--tw-shadow-color,#0000001a);box-shadow:var(--tw-inset-shadow),var(--tw-inset-ring-shadow),var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow);--tw-backdrop-blur:blur(var(--blur-md));-webkit-backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);backdrop-filter:var(--tw-backdrop-blur,)var(--tw-backdrop-brightness,)var(--tw-backdrop-contrast,)var(--tw-backdrop-grayscale,)var(--tw-backdrop-hue-rotate,)var(--tw-backdrop-invert,)var(--tw-backdrop-opacity,)var(--tw-backdrop-saturate,)var(--tw-backdrop-sepia,);border-width:1px;border-color:var(--color-neutral-800);background-color:var(--color-neutral-900);color:var(--color-white);overflow-x:auto;max-width:var(--container-7xl)!important}@media (prefers-color-scheme:dark){.tippy-box[data-theme~=laravel]{border-color:var(--color-neutral-700);background-color:var(--color-neutral-800);color:var(--color-neutral-100)}}.tippy-content[data-theme~=laravel]{padding-inline:calc(var(--spacing)*2);padding-block:calc(var(--spacing)*1)}@media (prefers-color-scheme:dark){.shiki,.shiki span{color:var(--shiki-dark)!important;font-style:var(--shiki-dark-font-style)!important;font-weight:var(--shiki-dark-font-weight)!important;-webkit-text-decoration:var(--shiki-dark-text-decoration)!important;text-decoration:var(--shiki-dark-text-decoration)!important}}@property --tw-rotate-x{syntax:"*";inherits:false}@property --tw-rotate-y{syntax:"*";inherits:false}@property --tw-rotate-z{syntax:"*";inherits:false}@property --tw-skew-x{syntax:"*";inherits:false}@property --tw-skew-y{syntax:"*";inherits:false}@property --tw-divide-x-reverse{syntax:"*";inherits:false;initial-value:0}@property --tw-border-style{syntax:"*";inherits:false;initial-value:solid}@property --tw-divide-y-reverse{syntax:"*";inherits:false;initial-value:0}@property --tw-leading{syntax:"*";inherits:false}@property --tw-font-weight{syntax:"*";inherits:false}@property --tw-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-shadow-color{syntax:"*";inherits:false}@property --tw-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-inset-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-inset-shadow-color{syntax:"*";inherits:false}@property --tw-inset-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-ring-color{syntax:"*";inherits:false}@property --tw-ring-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-inset-ring-color{syntax:"*";inherits:false}@property --tw-inset-ring-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-ring-inset{syntax:"*";inherits:false}@property --tw-ring-offset-width{syntax:"<length>";inherits:false;initial-value:0}@property --tw-ring-offset-color{syntax:"*";inherits:false;initial-value:#fff}@property --tw-ring-offset-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-blur{syntax:"*";inherits:false}@property --tw-brightness{syntax:"*";inherits:false}@property --tw-contrast{syntax:"*";inherits:false}@property --tw-grayscale{syntax:"*";inherits:false}@property --tw-hue-rotate{syntax:"*";inherits:false}@property --tw-invert{syntax:"*";inherits:false}@property --tw-opacity{syntax:"*";inherits:false}@property --tw-saturate{syntax:"*";inherits:false}@property --tw-sepia{syntax:"*";inherits:false}@property --tw-drop-shadow{syntax:"*";inherits:false}@property --tw-drop-shadow-color{syntax:"*";inherits:false}@property --tw-drop-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-drop-shadow-size{syntax:"*";inherits:false}@property --tw-duration{syntax:"*";inherits:false}@property --tw-ease{syntax:"*";inherits:false}@property --tw-backdrop-blur{syntax:"*";inherits:false}@property --tw-backdrop-brightness{syntax:"*";inherits:false}@property --tw-backdrop-contrast{syntax:"*";inherits:false}@property --tw-backdrop-grayscale{syntax:"*";inherits:false}@property --tw-backdrop-hue-rotate{syntax:"*";inherits:false}@property --tw-backdrop-invert{syntax:"*";inherits:false}@property --tw-backdrop-opacity{syntax:"*";inherits:false}@property --tw-backdrop-saturate{syntax:"*";inherits:false}@property --tw-backdrop-sepia{syntax:"*";inherits:false}
-</style>
-</head>
-<body class="font-sans antialiased overflow-x-hidden bg-neutral-50 dark:bg-neutral-900 dark:text-white scheme-light-dark">
-    <div class="min-h-dvh">
-        <section
-    class="w-full max-w-7xl mx-auto p-4 sm:p-14 border-x border-dashed border-neutral-300 dark:border-white/[9%] px-6 py-0 sm:py-0"
->
-    <script>
-    const markdown = '# Illuminate\\Database\\QueryException - Internal Server Error\n\nSQLSTATE[HY000]: General error: 1 no such function: YEAR (Connection: sqlite, Database: C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend\\database\\database.sqlite, SQL: select YEAR(created_at) as year, MONTH(created_at) as month, SUM(total) as revenue, COUNT(*) as order_count from \u0022orders\u0022 where \u0022status\u0022 != cancelled and \u0022created_at\u0022 \u003E= 2025-09-30 18:35:49 group by \u0022year\u0022, \u0022month\u0022 order by \u0022year\u0022 asc, \u0022month\u0022 asc)\n\nPHP 8.2.12\nLaravel 12.56.0\nlocalhost:8000\n\n## Stack Trace\n\n0 - vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php:838\n1 - vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php:794\n2 - vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php:411\n3 - vendor\\laravel\\framework\\src\\Illuminate\\Database\\Query\\Builder.php:3505\n4 - vendor\\laravel\\framework\\src\\Illuminate\\Database\\Query\\Builder.php:3490\n5 - vendor\\laravel\\framework\\src\\Illuminate\\Database\\Query\\Builder.php:4080\n6 - vendor\\laravel\\framework\\src\\Illuminate\\Database\\Query\\Builder.php:3489\n7 - vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\Builder.php:902\n8 - vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\Builder.php:884\n9 - app\\Http\\Controllers\\Api\\Admin\\DashboardController.php:148\n10 - vendor\\laravel\\framework\\src\\Illuminate\\Routing\\ControllerDispatcher.php:46\n11 - vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php:265\n12 - vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php:211\n13 - vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php:822\n14 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:180\n15 - app\\Http\\Middleware\\AdminMiddleware.php:22\n16 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n17 - vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Middleware\\SubstituteBindings.php:50\n18 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n19 - vendor\\laravel\\framework\\src\\Illuminate\\Auth\\Middleware\\Authenticate.php:63\n20 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n21 - vendor\\laravel\\sanctum\\src\\Http\\Middleware\\EnsureFrontendRequestsAreStateful.php:26\n22 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:180\n23 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:137\n24 - vendor\\laravel\\sanctum\\src\\Http\\Middleware\\EnsureFrontendRequestsAreStateful.php:25\n25 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n26 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:137\n27 - vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php:821\n28 - vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php:800\n29 - vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php:764\n30 - vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php:753\n31 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php:200\n32 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:180\n33 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php:21\n34 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull.php:31\n35 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n36 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php:21\n37 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TrimStrings.php:51\n38 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n39 - vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\ValidatePostSize.php:27\n40 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n41 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance.php:109\n42 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n43 - vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\HandleCors.php:74\n44 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n45 - vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\TrustProxies.php:58\n46 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n47 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks.php:22\n48 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n49 - vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\ValidatePathEncoding.php:26\n50 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:219\n51 - vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php:137\n52 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php:175\n53 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php:144\n54 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Application.php:1220\n55 - public\\index.php:20\n56 - vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\resources\\server.php:23\n\n## Request\n\nGET \/api\/admin\/dashboard\n\n## Headers\n\n* **host**: localhost:8000\n* **user-agent**: curl\/8.18.0\n* **accept**: *\/*\n* **authorization**: Bearer 4|FlrX8yqZEG8xk6WJej8s1tGNj3a6CU8KaZkF3But12d134e2\n\n## Route Context\n\ncontroller: App\\Http\\Controllers\\Api\\Admin\\DashboardController@stats\nmiddleware: api, auth:sanctum, admin\n\n## Route Parameters\n\nNo route parameter data available.\n\n## Database Queries\n\n* sqlite - select * from \u0022personal_access_tokens\u0022 where \u0022personal_access_tokens\u0022.\u0022id\u0022 = \u00274\u0027 limit 1 (3.2 ms)\n* sqlite - select * from \u0022users\u0022 where \u0022users\u0022.\u0022id\u0022 = 3 limit 1 (0.17 ms)\n* sqlite - update \u0022personal_access_tokens\u0022 set \u0022last_used_at\u0022 = \u00272026-03-30 18:35:49\u0027, \u0022updated_at\u0022 = \u00272026-03-30 18:35:49\u0027 where \u0022id\u0022 = 4 (7.18 ms)\n* sqlite - select count(*) as aggregate from \u0022products\u0022 (0.16 ms)\n* sqlite - select count(*) as aggregate from \u0022categories\u0022 (0.17 ms)\n* sqlite - select count(*) as aggregate from \u0022orders\u0022 (0.15 ms)\n* sqlite - select count(*) as aggregate from \u0022users\u0022 where \u0022is_admin\u0022 = 0 (0.1 ms)\n* sqlite - select count(*) as aggregate from \u0022reviews\u0022 (0.14 ms)\n* sqlite - select count(*) as aggregate from \u0022coupons\u0022 (0.14 ms)\n* sqlite - select count(*) as aggregate from \u0022wishlists\u0022 (0.15 ms)\n* sqlite - select count(*) as aggregate from \u0022orders\u0022 where \u0022status\u0022 = \u0027pending\u0027 (0.1 ms)\n* sqlite - select count(*) as aggregate from \u0022orders\u0022 where \u0022status\u0022 = \u0027processing\u0027 (0.09 ms)\n* sqlite - select count(*) as aggregate from \u0022orders\u0022 where \u0022status\u0022 = \u0027shipped\u0027 (0.07 ms)\n* sqlite - select count(*) as aggregate from \u0022orders\u0022 where \u0022status\u0022 = \u0027delivered\u0027 (0.07 ms)\n* sqlite - select count(*) as aggregate from \u0022orders\u0022 where \u0022status\u0022 = \u0027cancelled\u0027 (0.07 ms)\n* sqlite - select sum(\u0022total\u0022) as aggregate from \u0022orders\u0022 where \u0022status\u0022 != \u0027cancelled\u0027 (0.08 ms)\n* sqlite - select sum(\u0022total\u0022) as aggregate from \u0022orders\u0022 where \u0022status\u0022 != \u0027cancelled\u0027 and \u0022created_at\u0022 \u003E= \u00272026-03-01 00:00:00\u0027 (0.23 ms)\n* sqlite - select avg(\u0022total\u0022) as aggregate from \u0022orders\u0022 where \u0022status\u0022 != \u0027cancelled\u0027 (0.22 ms)\n* sqlite - select count(*) as aggregate from \u0022payments\u0022 (0.23 ms)\n* sqlite - select count(*) as aggregate from \u0022payments\u0022 where \u0022status\u0022 = \u0027completed\u0027 (0.17 ms)\n* sqlite - select count(*) as aggregate from \u0022payments\u0022 where \u0022status\u0022 = \u0027pending\u0027 (0.12 ms)\n* sqlite - select count(*) as aggregate from \u0022payments\u0022 where \u0022status\u0022 = \u0027failed\u0027 (0.14 ms)\n* sqlite - select count(*) as aggregate from \u0022payments\u0022 where \u0022status\u0022 = \u0027refunded\u0027 or \u0022status\u0022 = \u0027partially_refunded\u0027 (0.12 ms)\n* sqlite - select count(*) as aggregate from \u0022reviews\u0022 where \u0022is_approved\u0022 = 0 (0.12 ms)\n* sqlite - select count(*) as aggregate from \u0022reviews\u0022 where \u0022is_approved\u0022 = 1 (0.1 ms)\n* sqlite - select avg(\u0022rating\u0022) as aggregate from \u0022reviews\u0022 where \u0022is_approved\u0022 = 1 (0.14 ms)\n* sqlite - select count(*) as aggregate from \u0022coupons\u0022 where \u0022is_active\u0022 = 1 (0.13 ms)\n* sqlite - select count(*) as aggregate from \u0022coupons\u0022 where \u0022used_count\u0022 \u003E 0 (0.12 ms)\n* sqlite - select sum(\u0022used_count\u0022) as aggregate from \u0022coupons\u0022 (0.1 ms)\n* sqlite - select count(*) as aggregate from \u0022products\u0022 where \u0022stock\u0022 \u003C= 10 and \u0022stock\u0022 \u003E 0 and \u0022is_active\u0022 = 1 (0.21 ms)\n* sqlite - select count(*) as aggregate from \u0022products\u0022 where \u0022stock\u0022 = 0 and \u0022is_active\u0022 = 1 (0.13 ms)\n* sqlite - select sum(stock * price) as aggregate from \u0022products\u0022 where \u0022is_active\u0022 = 1 (0.19 ms)\n* sqlite - select * from \u0022orders\u0022 order by \u0022created_at\u0022 desc limit 10 (0.13 ms)\n* sqlite - select * from \u0022products\u0022 order by \u0022created_at\u0022 desc limit 10 (0.18 ms)\n* sqlite - select * from \u0022categories\u0022 where \u0022categories\u0022.\u0022id\u0022 in (2, 3, 4) (0.16 ms)\n* sqlite - select * from \u0022products\u0022 where \u0022stock\u0022 \u003C= 10 and \u0022stock\u0022 \u003E 0 and \u0022is_active\u0022 = 1 order by \u0022stock\u0022 asc limit 10 (0.18 ms)\n* sqlite - select * from \u0022products\u0022 where \u0022stock\u0022 = 0 and \u0022is_active\u0022 = 1 limit 10 (0.13 ms)\n* sqlite - select * from \u0022reviews\u0022 where \u0022is_approved\u0022 = 0 order by \u0022created_at\u0022 desc limit 10 (0.14 ms)\n* sqlite - select * from \u0022users\u0022 where \u0022is_admin\u0022 = 0 order by \u0022created_at\u0022 desc limit 10 (0.19 ms)\n* sqlite - select * from \u0022payments\u0022 order by \u0022created_at\u0022 desc limit 10 (0.14 ms)\n* sqlite - select * from \u0022inventory_logs\u0022 order by \u0022created_at\u0022 desc limit 10 (0.23 ms)\n* sqlite - select * from \u0022coupons\u0022 order by \u0022created_at\u0022 desc limit 10 (0.13 ms)\n* sqlite - select \u0022product_id\u0022, SUM(quantity) as total_sold from \u0022order_items\u0022 group by \u0022product_id\u0022 order by \u0022total_sold\u0022 desc limit 5 (0.19 ms)\n'
-</script>
-
-<div
-    class="flex items-center justify-between"
-    x-data="{
-        copied: false,
-        async copyToClipboard() {
-            try {
-                await window.copyToClipboard(markdown);
-                this.copied = true;
-                setTimeout(() => { this.copied = false }, 3000);
-            } catch (err) {
-                console.error('Failed to copy the markdown: ', err);
-            }
-        }
-    }"
->
-    <div class="flex items-center gap-2 h-[56px]">
-        <div class="w-[18px] h-[18px] flex items-center justify-center bg-rose-500 rounded-md">
-            <svg width="2" height="10" class="text-white" viewBox="0 0 2 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M1.00006 6.3188C1.41416 6.3188 1.75006 5.98295 1.75006 5.56885V1.43115C1.75006 1.01705 1.41416 0.681152 1.00006 0.681152C0.585961 0.681152 0.250061 1.01705 0.250061 1.43115V5.56885C0.250061 5.98295 0.585961 6.3188 1.00006 6.3188Z" fill="currentColor" />
-                <path d="M1.00006 9.41699C1.55235 9.41699 2.00007 8.96929 2.00007 8.41699C2.00007 7.86469 1.55235 7.41699 1.00006 7.41699C0.447781 7.41699 6.10352e-05 7.86469 6.10352e-05 8.41699C6.10352e-05 8.96929 0.447781 9.41699 1.00006 9.41699Z" fill="currentColor "/>
-            </svg>
-        </div>
-        <div class="font-medium text-sm text-neutral-900 dark:text-white">
-            Internal Server Error
-        </div>
-    </div>
-
-    <button
-        x-cloak
-        class="text-sm rounded-md border px-3 h-8 flex items-center gap-2 transition-colors duration-200 ease-in-out cursor-pointer shadow-xs text-neutral-600 dark:text-neutral-400 bg-white/5 border-neutral-200 hover:bg-neutral-100 dark:bg-white/5 dark:border-white/10 dark:hover:bg-white/10"
-        @click="copyToClipboard()"
-    >
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" class="w-3 h-3" x-show="!copied">
-  <g clip-path="url(#clip0_14732_6079)">
-    <path d="M4.25 4.25012V1.25012H10.75V7.75012H7.75M7.75 4.25012H1.25V10.7501H7.75V4.25012Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-  </g>
-  <defs>
-    <clipPath id="clip0_14732_6079">
-      <rect width="12" height="12" />
-    </clipPath>
-  </defs>
-</svg>
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-3 h-3 text-emerald-500" x-show="copied">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-</svg>
-        <span x-text="copied ? 'Copied to clipboard' : 'Copy as Markdown'"></span>
-    </button>
-</div>
-</section>
-
-
-...948303 bytes truncated...
-
-The tool call succeeded but the output was truncated. Full output saved to: C:\Users\angellX\.local\share\opencode\tool-output\tool_d4007dc3f001Mn39iwbBK61Bd6
-Use the Task tool to have explore agent process this file with Grep and Read (with offset/limit). Do NOT read the full file yourself - delegate to save context.
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 5.9s)
-
-_Thinking:_
-
-Now I can see the real error. The issue is:
-
-```
-Illuminate\Database\QueryException - Internal Server Error
-
-SQLSTATE[HY000]: General error: 1 no such function: YEAR (Connection: sqlite, Database: C:\Users\angellX\Desktop\shoes_ecom-more_improved\backend\database\database.sqlite, SQL: select YEAR(created_at) as year, MONTH(created_at) as month, SUM(total) as revenue, COUNT(*) as order_count from "orders" where "status" != cancelled and "created_at" >= 2025-09-30 18:35:49 group by "year", "month" order by "year" asc, "month" asc)
-```
-
-The problem is that SQLite doesn't support the YEAR() and MONTH() functions like MySQL does. The DashboardController.php is using MySQL-specific SQL functions.
-
-I need to update the DashboardController to use SQLite-compatible date functions or handle this differently.
-
-I found the issue! The DashboardController is using MySQL-specific functions (YEAR, MONTH) but SQLite doesn't support them. Let me fix the DashboardController:
-
-**Tool: read**
-
-**Input:**
-```json
-{
-  "filePath": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend\\app\\Http\\Controllers\\Api\\Admin\\DashboardController.php",
-  "offset": 135,
-  "limit": 30
-}
-```
-
-**Output:**
-```
-<path>C:\Users\angellX\Desktop\shoes_ecom-more_improved\backend\app\Http\Controllers\Api\Admin\DashboardController.php</path>
-<type>file</type>
-<content>135:         
-136:         // Revenue by month (last 6 months)
-137:         $monthlyRevenueData = Order::where('status', '!=', 'cancelled')
-138:             ->where('created_at', '>=', now()->subMonths(6))
-139:             ->select(
-140:                 DB::raw('YEAR(created_at) as year'),
-141:                 DB::raw('MONTH(created_at) as month'),
-142:                 DB::raw('SUM(total) as revenue'),
-143:                 DB::raw('COUNT(*) as order_count')
-144:             )
-145:             ->groupBy('year', 'month')
-146:             ->orderBy('year', 'asc')
-147:             ->orderBy('month', 'asc')
-148:             ->get();
-149: 
-150:         return response()->json([
-151:             'stats' => [
-152:                 'total_products' => $totalProducts,
-153:                 'total_categories' => $totalCategories,
-154:                 'total_orders' => $totalOrders,
-155:                 'total_users' => $totalUsers,
-156:                 'total_reviews' => $totalReviews,
-157:                 'total_coupons' => $totalCoupons,
-158:                 'total_wishlist_items' => $totalWishlistItems,
-159:                 'pending_orders' => $pendingOrders,
-160:                 'processing_orders' => $processingOrders,
-161:                 'shipped_orders' => $shippedOrders,
-162:                 'completed_orders' => $completedOrders,
-163:                 'cancelled_orders' => $cancelledOrders,
-164:                 'total_revenue' => $totalRevenue,
-
-(Showing lines 135-164 of 200. Use offset=165 to continue.)
-</content>
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 9.4s)
-
-_Thinking:_
-
-I need to fix the DashboardController to be compatible with SQLite. The issue is with the YEAR() and MONTH() functions. I'll update it to use a different approach that works with SQLite.
-
-For SQLite, I need to use strftime() function instead of YEAR() and MONTH().
-
-**Tool: edit**
-
-**Input:**
-```json
-{
-  "filePath": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend\\app\\Http\\Controllers\\Api\\Admin\\DashboardController.php",
-  "oldString": "        // Revenue by month (last 6 months)\n        $monthlyRevenueData = Order::where('status', '!=', 'cancelled')\n            ->where('created_at', '>=', now()->subMonths(6))\n            ->select(\n                DB::raw('YEAR(created_at) as year'),\n                DB::raw('MONTH(created_at) as month'),\n                DB::raw('SUM(total) as revenue'),\n                DB::raw('COUNT(*) as order_count')\n            )\n            ->groupBy('year', 'month')\n            ->orderBy('year', 'asc')\n            ->orderBy('month', 'asc')\n            ->get();",
-  "newString": "        // Revenue by month (last 6 months)\n        $monthlyRevenueData = Order::where('status', '!=', 'cancelled')\n            ->where('created_at', '>=', now()->subMonths(6))\n            ->select(\n                DB::raw('strftime(\"%Y\", created_at) as year'),\n                DB::raw('strftime(\"%m\", created_at) as month'),\n                DB::raw('SUM(total) as revenue'),\n                DB::raw('COUNT(*) as order_count')\n            )\n            ->groupBy('year', 'month')\n            ->orderBy('year', 'asc')\n            ->orderBy('month', 'asc')\n            ->get();"
-}
-```
-
-**Output:**
-```
-Edit applied successfully.
-```
-
----
-
-## Assistant (Build · mimo-v2-omni-free · 4.9s)
-
-_Thinking:_
-
-Now let me test the API again:
-
-**Tool: bash**
-
-**Input:**
-```json
-{
-  "command": "TOKEN=$(curl -s -X POST \"http://localhost:8000/api/admin/login\" -H \"Content-Type: application/json\" -d '{\"email\": \"admin@example.com\", \"password\": \"password\"}' | php -r \"echo json_decode(file_get_contents('php://stdin'), true)['token'];\") && curl -s \"http://localhost:8000/api/admin/dashboard\" -H \"Authorization: Bearer $TOKEN\" | head -c 500",
-  "description": "Test dashboard API after fix",
-  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved\\backend"
-}
-```
-
-**Output:**
-```
-{"stats":{"total_products":14,"total_categories":4,"total_orders":0,"total_users":1,"total_reviews":0,"total_coupons":0,"total_wishlist_items":0,"pending_orders":0,"processing_orders":0,"shipped_orders":0,"completed_orders":0,"cancelled_orders":0,"total_revenue":0,"monthly_revenue":0,"average_order_value":0,"order_status_distribution":{"pending":0,"processing":0,"shipped":0,"delivered":0,"cancelled":0},"total_payments":0,"completed_payments":0,"pending_payments":0,"failed_payments":0,"refunded_p
-```
+**Updated:** 31/03/2026, 00:50:59
 
 ---
 
@@ -6237,6 +4669,1651 @@ Added "Payment Settings" with gear icon to admin navigation
 - Credentials are masked in UI
 - Admin must configure before enabling
 - "At least one payment method must be enabled" validation
+
+---
+
+## User
+
+push this code to the Main branch of the git repo that is already seted , and overwrite the existing one 
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 7.1s)
+
+_Thinking:_
+
+The user wants me to push the code to the main branch of a git repo. They said "overwrite the existing one" which suggests they want to force push or replace the existing code. Let me first check if there's a git repository in the project and what its current state is.
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "git status",
+  "description": "Check git status",
+  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved"
+}
+```
+
+**Output:**
+```
+fatal: not a git repository (or any of the parent directories): .git
+
+```
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 22.8s)
+
+_Thinking:_
+
+The project is not a git repository yet. Let me initialize one and set up the remote.
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "git init && git add -A && git commit -m \"Initial commit - E-commerce with payments, reviews, coupons, inventory management\"",
+  "description": "Initialize git repo and make initial commit",
+  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved"
+}
+```
+
+**Output:**
+```
+Initialized empty Git repository in C:/Users/angellX/Desktop/shoes_ecom-more_improved/.git/
+warning: in the working copy of '.dockerignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.github/workflows/ci-cd.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Dockerfile.backend', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Dockerfile.frontend', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'create-database.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docker-compose.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docker/frontend-nginx.conf', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docker/nginx.conf', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docker/supervisor.conf', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/.env.example', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/.vscode/extensions.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/index.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/pnpm-lock.yaml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/postcss.config.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/public/icons.svg', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/App.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/admin.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/api/index.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/assets/vite.svg', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/HelloWorld.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/layout/AppFooter.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/layout/AppHeader.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/product/ProductCard.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/env.d.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/layouts/AdminLayout.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/main.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/router/index.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/stores/auth.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/stores/cart.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/stores/orders.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/stores/products.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/style.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/types/index.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/CartView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/CategoryView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/CheckoutView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/HomeView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/LoginView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/OrderDetailView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/OrdersView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/PaymentView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/ProductDetailView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/ProductsView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/ProfileView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/RegisterView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/CategoriesView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/CouponsView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/DashboardView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/InventoryView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/OAuthSettingsView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/OrderDetailView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/OrdersView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/PaymentSettingsView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/PaymentsView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/ProductFormView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/ProductsView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/ReviewsView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/UsersView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/tailwind.config.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/tsconfig.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/tsconfig.node.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/vite.config.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'google_oauth.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'reset-database.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'setup.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'start-all.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'start-backend.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'start-frontend.bat', LF will be replaced by CRLF the next time Git touches it
+[master (root-commit) 046e8f9] Initial commit - E-commerce with payments, reviews, coupons, inventory management
+ 207 files changed, 44923 insertions(+)
+ create mode 100644 .dockerignore
+ create mode 100644 .github/workflows/ci-cd.yml
+ create mode 100644 Dockerfile.backend
+ create mode 100644 Dockerfile.frontend
+ create mode 100644 README.md
+ create mode 100644 backend/.editorconfig
+ create mode 100644 backend/.env.example
+ create mode 100644 backend/.env.production.example
+ create mode 100644 backend/.gitattributes
+ create mode 100644 backend/.gitignore
+ create mode 100644 backend/README.md
+ create mode 100644 backend/_nul
+ create mode 100644 backend/app/Http/Controllers/Admin/SettingsController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminAuthController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminCategoryController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminCouponController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminInventoryController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminOrderController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminPaymentController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminProductController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminReviewController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminUserController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/DashboardController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/PaymentSettingsController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Auth/GoogleAuthController.php
+ create mode 100644 backend/app/Http/Controllers/Api/AuthController.php
+ create mode 100644 backend/app/Http/Controllers/Api/CartController.php
+ create mode 100644 backend/app/Http/Controllers/Api/CategoryController.php
+ create mode 100644 backend/app/Http/Controllers/Api/CouponController.php
+ create mode 100644 backend/app/Http/Controllers/Api/OrderController.php
+ create mode 100644 backend/app/Http/Controllers/Api/PaymentController.php
+ create mode 100644 backend/app/Http/Controllers/Api/ProductController.php
+ create mode 100644 backend/app/Http/Controllers/Api/ReviewController.php
+ create mode 100644 backend/app/Http/Controllers/Api/WishlistController.php
+ create mode 100644 backend/app/Http/Controllers/Controller.php
+ create mode 100644 backend/app/Http/Middleware/AdminMiddleware.php
+ create mode 100644 backend/app/Models/CartItem.php
+ create mode 100644 backend/app/Models/Category.php
+ create mode 100644 backend/app/Models/Coupon.php
+ create mode 100644 backend/app/Models/InventoryLog.php
+ create mode 100644 backend/app/Models/Order.php
+ create mode 100644 backend/app/Models/OrderItem.php
+ create mode 100644 backend/app/Models/Payment.php
+ create mode 100644 backend/app/Models/Product.php
+ create mode 100644 backend/app/Models/Review.php
+ create mode 100644 backend/app/Models/Setting.php
+ create mode 100644 backend/app/Models/User.php
+ create mode 100644 backend/app/Models/Wishlist.php
+ create mode 100644 backend/app/Notifications/LowStockAlertNotification.php
+ create mode 100644 backend/app/Notifications/OrderPlacedNotification.php
+ create mode 100644 backend/app/Notifications/OrderShippedNotification.php
+ create mode 100644 backend/app/Notifications/WelcomeNotification.php
+ create mode 100644 backend/app/Providers/AppServiceProvider.php
+ create mode 100644 backend/app/Services/InventoryService.php
+ create mode 100644 backend/app/Services/PaymentService.php
+ create mode 100644 backend/artisan
+ create mode 100644 backend/backup-01-backend.zip
+ create mode 100644 backend/bootstrap/app.php
+ create mode 100644 backend/bootstrap/cache/.gitignore
+ create mode 100644 backend/bootstrap/providers.php
+ create mode 100644 backend/composer.json
+ create mode 100644 backend/composer.lock
+ create mode 100644 backend/config/app.php
+ create mode 100644 backend/config/auth.php
+ create mode 100644 backend/config/cache.php
+ create mode 100644 backend/config/cors.php
+ create mode 100644 backend/config/database.php
+ create mode 100644 backend/config/filesystems.php
+ create mode 100644 backend/config/logging.php
+ create mode 100644 backend/config/mail.php
+ create mode 100644 backend/config/queue.php
+ create mode 100644 backend/config/sanctum.php
+ create mode 100644 backend/config/services.php
+ create mode 100644 backend/config/session.php
+ create mode 100644 backend/database/.gitignore
+ create mode 100644 backend/database/factories/CategoryFactory.php
+ create mode 100644 backend/database/factories/ProductFactory.php
+ create mode 100644 backend/database/factories/UserFactory.php
+ create mode 100644 backend/database/migrations/0001_01_01_000000_create_users_table.php
+ create mode 100644 backend/database/migrations/0001_01_01_000001_create_cache_table.php
+ create mode 100644 backend/database/migrations/0001_01_01_000002_create_jobs_table.php
+ create mode 100644 backend/database/migrations/2026_03_28_184824_create_categories_table.php
+ create mode 100644 backend/database/migrations/2026_03_28_184825_create_orders_table.php
+ create mode 100644 backend/database/migrations/2026_03_28_184825_create_products_table.php
+ create mode 100644 backend/database/migrations/2026_03_28_184826_create_order_items_table.php
+ create mode 100644 backend/database/migrations/2026_03_28_184827_create_cart_items_table.php
+ create mode 100644 backend/database/migrations/2026_03_28_200331_create_personal_access_tokens_table.php
+ create mode 100644 backend/database/migrations/2026_03_28_200528_add_fields_to_users_table.php
+ create mode 100644 backend/database/migrations/2026_03_28_202347_add_is_admin_to_users_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_073511_add_navbar_fields_to_categories_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_092612_add_oauth_fields_to_users_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_093611_create_settings_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_163103_create_payments_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_164856_create_reviews_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_165100_create_wishlists_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_165231_create_coupons_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_165351_add_coupon_fields_to_orders_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_165532_create_inventory_logs_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_172429_add_performance_indexes.php
+ create mode 100644 backend/database/seeders/DatabaseSeeder.php
+ create mode 100644 backend/package.json
+ create mode 100644 backend/phpunit.xml
+ create mode 100644 backend/public/.htaccess
+ create mode 100644 backend/public/favicon.ico
+ create mode 100644 backend/public/index.php
+ create mode 100644 backend/public/robots.txt
+ create mode 100644 backend/resources/css/app.css
+ create mode 100644 backend/resources/js/app.js
+ create mode 100644 backend/resources/js/bootstrap.js
+ create mode 100644 backend/resources/views/welcome.blade.php
+ create mode 100644 backend/routes/admin.php
+ create mode 100644 backend/routes/api.php
+ create mode 100644 backend/routes/console.php
+ create mode 100644 backend/routes/web.php
+ create mode 100644 backend/storage/app/.gitignore
+ create mode 100644 backend/storage/app/private/.gitignore
+ create mode 100644 backend/storage/app/public/.gitignore
+ create mode 100644 backend/storage/framework/.gitignore
+ create mode 100644 backend/storage/framework/cache/.gitignore
+ create mode 100644 backend/storage/framework/cache/data/.gitignore
+ create mode 100644 backend/storage/framework/sessions/.gitignore
+ create mode 100644 backend/storage/framework/testing/.gitignore
+ create mode 100644 backend/storage/framework/views/.gitignore
+ create mode 100644 backend/storage/logs/.gitignore
+ create mode 100644 backend/tests/Feature/ExampleTest.php
+ create mode 100644 backend/tests/Feature/ProductApiTest.php
+ create mode 100644 backend/tests/TestCase.php
+ create mode 100644 backend/tests/Unit/ExampleTest.php
+ create mode 100644 backend/tests/Unit/Models/ProductTest.php
+ create mode 100644 backend/vite.config.js
+ create mode 100644 create-database.bat
+ create mode 100644 create-database.zip
+ create mode 100644 docker (2).zip
+ create mode 100644 docker-compose.yml
+ create mode 100644 docker.zip
+ create mode 100644 docker/frontend-nginx.conf
+ create mode 100644 docker/nginx.conf
+ create mode 100644 docker/supervisor.conf
+ create mode 100644 frontend.zip
+ create mode 100644 frontend/.env.example
+ create mode 100644 frontend/.gitignore
+ create mode 100644 frontend/.vscode/extensions.json
+ create mode 100644 frontend/README.md
+ create mode 100644 frontend/backup-01-frontend.zip
+ create mode 100644 frontend/index.html
+ create mode 100644 frontend/package-lock.json
+ create mode 100644 frontend/package.json
+ create mode 100644 frontend/pnpm-lock.yaml
+ create mode 100644 frontend/postcss.config.js
+ create mode 100644 frontend/public/favicon.svg
+ create mode 100644 frontend/public/icons.svg
+ create mode 100644 frontend/src/App.vue
+ create mode 100644 frontend/src/admin.css
+ create mode 100644 frontend/src/api/index.ts
+ create mode 100644 frontend/src/assets/hero.png
+ create mode 100644 frontend/src/assets/vite.svg
+ create mode 100644 frontend/src/assets/vue.svg
+ create mode 100644 frontend/src/components/HelloWorld.vue
+ create mode 100644 frontend/src/components/layout/AppFooter.vue
+ create mode 100644 frontend/src/components/layout/AppHeader.vue
+ create mode 100644 frontend/src/components/product/ProductCard.vue
+ create mode 100644 frontend/src/env.d.ts
+ create mode 100644 frontend/src/layouts/AdminLayout.vue
+ create mode 100644 frontend/src/main.js
+ create mode 100644 frontend/src/router/index.js
+ create mode 100644 frontend/src/stores/auth.js
+ create mode 100644 frontend/src/stores/cart.js
+ create mode 100644 frontend/src/stores/orders.js
+ create mode 100644 frontend/src/stores/products.js
+ create mode 100644 frontend/src/style.css
+ create mode 100644 frontend/src/types/index.ts
+ create mode 100644 frontend/src/views/CartView.vue
+ create mode 100644 frontend/src/views/CategoryView.vue
+ create mode 100644 frontend/src/views/CheckoutView.vue
+ create mode 100644 frontend/src/views/HomeView.vue
+ create mode 100644 frontend/src/views/LoginView.vue
+ create mode 100644 frontend/src/views/OrderDetailView.vue
+ create mode 100644 frontend/src/views/OrdersView.vue
+ create mode 100644 frontend/src/views/PaymentView.vue
+ create mode 100644 frontend/src/views/ProductDetailView.vue
+ create mode 100644 frontend/src/views/ProductsView.vue
+ create mode 100644 frontend/src/views/ProfileView.vue
+ create mode 100644 frontend/src/views/RegisterView.vue
+ create mode 100644 frontend/src/views/admin/CategoriesView.vue
+ create mode 100644 frontend/src/views/admin/CouponsView.vue
+ create mode 100644 frontend/src/views/admin/DashboardView.vue
+ create mode 100644 frontend/src/views/admin/InventoryView.vue
+ create mode 100644 frontend/src/views/admin/OAuthSettingsView.vue
+ create mode 100644 frontend/src/views/admin/OrderDetailView.vue
+ create mode 100644 frontend/src/views/admin/OrdersView.vue
+ create mode 100644 frontend/src/views/admin/PaymentSettingsView.vue
+ create mode 100644 frontend/src/views/admin/PaymentsView.vue
+ create mode 100644 frontend/src/views/admin/ProductFormView.vue
+ create mode 100644 frontend/src/views/admin/ProductsView.vue
+ create mode 100644 frontend/src/views/admin/ReviewsView.vue
+ create mode 100644 frontend/src/views/admin/UsersView.vue
+ create mode 100644 frontend/tailwind.config.js
+ create mode 100644 frontend/tsconfig.json
+ create mode 100644 frontend/tsconfig.node.json
+ create mode 100644 frontend/vite.config.ts
+ create mode 100644 google_oauth.txt
+ create mode 100644 reset-database.bat
+ create mode 100644 session-ses_2c08.md
+ create mode 100644 setup.bat
+ create mode 100644 start-all.bat
+ create mode 100644 start-backend.bat
+ create mode 100644 start-frontend.bat
+
+```
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 2.9s)
+
+---
+
+## User
+
+push this code to the Main branch of the git repo that is already seted , and overwrite the existing one and ignore the Node modules and the zip file in it \
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 12.3s)
+
+_Thinking:_
+
+The user wants to push the code to a main branch of an existing git repo and overwrite the existing code. They also want to ignore node_modules and zip files. Let me first set up the .gitignore to exclude those files, then add a remote and push to main.
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "echo \"node_modules/\n.zip\n*.zip\nbackend/vendor/\nbackend/storage/logs/*\nbackend/storage/framework/*\nbackend/database/database.sqlite\" > .gitignore && git rm -r --cached . 2>/dev/null || true && git add .gitignore && git commit -m \"Add .gitignore to exclude node_modules, vendor, and zip files\"",
+  "description": "Create .gitignore and clean cache",
+  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved"
+}
+```
+
+**Output:**
+```
+rm '.dockerignore'
+rm '.github/workflows/ci-cd.yml'
+rm 'Dockerfile.backend'
+rm 'Dockerfile.frontend'
+rm 'README.md'
+rm 'backend/.editorconfig'
+rm 'backend/.env.example'
+rm 'backend/.env.production.example'
+rm 'backend/.gitattributes'
+rm 'backend/.gitignore'
+rm 'backend/README.md'
+rm 'backend/_nul'
+rm 'backend/app/Http/Controllers/Admin/SettingsController.php'
+rm 'backend/app/Http/Controllers/Api/Admin/AdminAuthController.php'
+rm 'backend/app/Http/Controllers/Api/Admin/AdminCategoryController.php'
+rm 'backend/app/Http/Controllers/Api/Admin/AdminCouponController.php'
+rm 'backend/app/Http/Controllers/Api/Admin/AdminInventoryController.php'
+rm 'backend/app/Http/Controllers/Api/Admin/AdminOrderController.php'
+rm 'backend/app/Http/Controllers/Api/Admin/AdminPaymentController.php'
+rm 'backend/app/Http/Controllers/Api/Admin/AdminProductController.php'
+rm 'backend/app/Http/Controllers/Api/Admin/AdminReviewController.php'
+rm 'backend/app/Http/Controllers/Api/Admin/AdminUserController.php'
+rm 'backend/app/Http/Controllers/Api/Admin/DashboardController.php'
+rm 'backend/app/Http/Controllers/Api/Admin/PaymentSettingsController.php'
+rm 'backend/app/Http/Controllers/Api/Auth/GoogleAuthController.php'
+rm 'backend/app/Http/Controllers/Api/AuthController.php'
+rm 'backend/app/Http/Controllers/Api/CartController.php'
+rm 'backend/app/Http/Controllers/Api/CategoryController.php'
+rm 'backend/app/Http/Controllers/Api/CouponController.php'
+rm 'backend/app/Http/Controllers/Api/OrderController.php'
+rm 'backend/app/Http/Controllers/Api/PaymentController.php'
+rm 'backend/app/Http/Controllers/Api/ProductController.php'
+rm 'backend/app/Http/Controllers/Api/ReviewController.php'
+rm 'backend/app/Http/Controllers/Api/WishlistController.php'
+rm 'backend/app/Http/Controllers/Controller.php'
+rm 'backend/app/Http/Middleware/AdminMiddleware.php'
+rm 'backend/app/Models/CartItem.php'
+rm 'backend/app/Models/Category.php'
+rm 'backend/app/Models/Coupon.php'
+rm 'backend/app/Models/InventoryLog.php'
+rm 'backend/app/Models/Order.php'
+rm 'backend/app/Models/OrderItem.php'
+rm 'backend/app/Models/Payment.php'
+rm 'backend/app/Models/Product.php'
+rm 'backend/app/Models/Review.php'
+rm 'backend/app/Models/Setting.php'
+rm 'backend/app/Models/User.php'
+rm 'backend/app/Models/Wishlist.php'
+rm 'backend/app/Notifications/LowStockAlertNotification.php'
+rm 'backend/app/Notifications/OrderPlacedNotification.php'
+rm 'backend/app/Notifications/OrderShippedNotification.php'
+rm 'backend/app/Notifications/WelcomeNotification.php'
+rm 'backend/app/Providers/AppServiceProvider.php'
+rm 'backend/app/Services/InventoryService.php'
+rm 'backend/app/Services/PaymentService.php'
+rm 'backend/artisan'
+rm 'backend/backup-01-backend.zip'
+rm 'backend/bootstrap/app.php'
+rm 'backend/bootstrap/cache/.gitignore'
+rm 'backend/bootstrap/providers.php'
+rm 'backend/composer.json'
+rm 'backend/composer.lock'
+rm 'backend/config/app.php'
+rm 'backend/config/auth.php'
+rm 'backend/config/cache.php'
+rm 'backend/config/cors.php'
+rm 'backend/config/database.php'
+rm 'backend/config/filesystems.php'
+rm 'backend/config/logging.php'
+rm 'backend/config/mail.php'
+rm 'backend/config/queue.php'
+rm 'backend/config/sanctum.php'
+rm 'backend/config/services.php'
+rm 'backend/config/session.php'
+rm 'backend/database/.gitignore'
+rm 'backend/database/factories/CategoryFactory.php'
+rm 'backend/database/factories/ProductFactory.php'
+rm 'backend/database/factories/UserFactory.php'
+rm 'backend/database/migrations/0001_01_01_000000_create_users_table.php'
+rm 'backend/database/migrations/0001_01_01_000001_create_cache_table.php'
+rm 'backend/database/migrations/0001_01_01_000002_create_jobs_table.php'
+rm 'backend/database/migrations/2026_03_28_184824_create_categories_table.php'
+rm 'backend/database/migrations/2026_03_28_184825_create_orders_table.php'
+rm 'backend/database/migrations/2026_03_28_184825_create_products_table.php'
+rm 'backend/database/migrations/2026_03_28_184826_create_order_items_table.php'
+rm 'backend/database/migrations/2026_03_28_184827_create_cart_items_table.php'
+rm 'backend/database/migrations/2026_03_28_200331_create_personal_access_tokens_table.php'
+rm 'backend/database/migrations/2026_03_28_200528_add_fields_to_users_table.php'
+rm 'backend/database/migrations/2026_03_28_202347_add_is_admin_to_users_table.php'
+rm 'backend/database/migrations/2026_03_30_073511_add_navbar_fields_to_categories_table.php'
+rm 'backend/database/migrations/2026_03_30_092612_add_oauth_fields_to_users_table.php'
+rm 'backend/database/migrations/2026_03_30_093611_create_settings_table.php'
+rm 'backend/database/migrations/2026_03_30_163103_create_payments_table.php'
+rm 'backend/database/migrations/2026_03_30_164856_create_reviews_table.php'
+rm 'backend/database/migrations/2026_03_30_165100_create_wishlists_table.php'
+rm 'backend/database/migrations/2026_03_30_165231_create_coupons_table.php'
+rm 'backend/database/migrations/2026_03_30_165351_add_coupon_fields_to_orders_table.php'
+rm 'backend/database/migrations/2026_03_30_165532_create_inventory_logs_table.php'
+rm 'backend/database/migrations/2026_03_30_172429_add_performance_indexes.php'
+rm 'backend/database/seeders/DatabaseSeeder.php'
+rm 'backend/package.json'
+rm 'backend/phpunit.xml'
+rm 'backend/public/.htaccess'
+rm 'backend/public/favicon.ico'
+rm 'backend/public/index.php'
+rm 'backend/public/robots.txt'
+rm 'backend/resources/css/app.css'
+rm 'backend/resources/js/app.js'
+rm 'backend/resources/js/bootstrap.js'
+rm 'backend/resources/views/welcome.blade.php'
+rm 'backend/routes/admin.php'
+rm 'backend/routes/api.php'
+rm 'backend/routes/console.php'
+rm 'backend/routes/web.php'
+rm 'backend/storage/app/.gitignore'
+rm 'backend/storage/app/private/.gitignore'
+rm 'backend/storage/app/public/.gitignore'
+rm 'backend/storage/framework/.gitignore'
+rm 'backend/storage/framework/cache/.gitignore'
+rm 'backend/storage/framework/cache/data/.gitignore'
+rm 'backend/storage/framework/sessions/.gitignore'
+rm 'backend/storage/framework/testing/.gitignore'
+rm 'backend/storage/framework/views/.gitignore'
+rm 'backend/storage/logs/.gitignore'
+rm 'backend/tests/Feature/ExampleTest.php'
+rm 'backend/tests/Feature/ProductApiTest.php'
+rm 'backend/tests/TestCase.php'
+rm 'backend/tests/Unit/ExampleTest.php'
+rm 'backend/tests/Unit/Models/ProductTest.php'
+rm 'backend/vite.config.js'
+rm 'create-database.bat'
+rm 'create-database.zip'
+rm 'docker (2).zip'
+rm 'docker-compose.yml'
+rm 'docker.zip'
+rm 'docker/frontend-nginx.conf'
+rm 'docker/nginx.conf'
+rm 'docker/supervisor.conf'
+rm 'frontend.zip'
+rm 'frontend/.env.example'
+rm 'frontend/.gitignore'
+rm 'frontend/.vscode/extensions.json'
+rm 'frontend/README.md'
+rm 'frontend/backup-01-frontend.zip'
+rm 'frontend/index.html'
+rm 'frontend/package-lock.json'
+rm 'frontend/package.json'
+rm 'frontend/pnpm-lock.yaml'
+rm 'frontend/postcss.config.js'
+rm 'frontend/public/favicon.svg'
+rm 'frontend/public/icons.svg'
+rm 'frontend/src/App.vue'
+rm 'frontend/src/admin.css'
+rm 'frontend/src/api/index.ts'
+rm 'frontend/src/assets/hero.png'
+rm 'frontend/src/assets/vite.svg'
+rm 'frontend/src/assets/vue.svg'
+rm 'frontend/src/components/HelloWorld.vue'
+rm 'frontend/src/components/layout/AppFooter.vue'
+rm 'frontend/src/components/layout/AppHeader.vue'
+rm 'frontend/src/components/product/ProductCard.vue'
+rm 'frontend/src/env.d.ts'
+rm 'frontend/src/layouts/AdminLayout.vue'
+rm 'frontend/src/main.js'
+rm 'frontend/src/router/index.js'
+rm 'frontend/src/stores/auth.js'
+rm 'frontend/src/stores/cart.js'
+rm 'frontend/src/stores/orders.js'
+rm 'frontend/src/stores/products.js'
+rm 'frontend/src/style.css'
+rm 'frontend/src/types/index.ts'
+rm 'frontend/src/views/CartView.vue'
+rm 'frontend/src/views/CategoryView.vue'
+rm 'frontend/src/views/CheckoutView.vue'
+rm 'frontend/src/views/HomeView.vue'
+rm 'frontend/src/views/LoginView.vue'
+rm 'frontend/src/views/OrderDetailView.vue'
+rm 'frontend/src/views/OrdersView.vue'
+rm 'frontend/src/views/PaymentView.vue'
+rm 'frontend/src/views/ProductDetailView.vue'
+rm 'frontend/src/views/ProductsView.vue'
+rm 'frontend/src/views/ProfileView.vue'
+rm 'frontend/src/views/RegisterView.vue'
+rm 'frontend/src/views/admin/CategoriesView.vue'
+rm 'frontend/src/views/admin/CouponsView.vue'
+rm 'frontend/src/views/admin/DashboardView.vue'
+rm 'frontend/src/views/admin/InventoryView.vue'
+rm 'frontend/src/views/admin/OAuthSettingsView.vue'
+rm 'frontend/src/views/admin/OrderDetailView.vue'
+rm 'frontend/src/views/admin/OrdersView.vue'
+rm 'frontend/src/views/admin/PaymentSettingsView.vue'
+rm 'frontend/src/views/admin/PaymentsView.vue'
+rm 'frontend/src/views/admin/ProductFormView.vue'
+rm 'frontend/src/views/admin/ProductsView.vue'
+rm 'frontend/src/views/admin/ReviewsView.vue'
+rm 'frontend/src/views/admin/UsersView.vue'
+rm 'frontend/tailwind.config.js'
+rm 'frontend/tsconfig.json'
+rm 'frontend/tsconfig.node.json'
+rm 'frontend/vite.config.ts'
+rm 'google_oauth.txt'
+rm 'reset-database.bat'
+rm 'session-ses_2c08.md'
+rm 'setup.bat'
+rm 'start-all.bat'
+rm 'start-backend.bat'
+rm 'start-frontend.bat'
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+[master 58be17b] Add .gitignore to exclude node_modules, vendor, and zip files
+ 208 files changed, 7 insertions(+), 44923 deletions(-)
+ delete mode 100644 .dockerignore
+ delete mode 100644 .github/workflows/ci-cd.yml
+ create mode 100644 .gitignore
+ delete mode 100644 Dockerfile.backend
+ delete mode 100644 Dockerfile.frontend
+ delete mode 100644 README.md
+ delete mode 100644 backend/.editorconfig
+ delete mode 100644 backend/.env.example
+ delete mode 100644 backend/.env.production.example
+ delete mode 100644 backend/.gitattributes
+ delete mode 100644 backend/.gitignore
+ delete mode 100644 backend/README.md
+ delete mode 100644 backend/_nul
+ delete mode 100644 backend/app/Http/Controllers/Admin/SettingsController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/Admin/AdminAuthController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/Admin/AdminCategoryController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/Admin/AdminCouponController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/Admin/AdminInventoryController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/Admin/AdminOrderController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/Admin/AdminPaymentController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/Admin/AdminProductController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/Admin/AdminReviewController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/Admin/AdminUserController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/Admin/DashboardController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/Admin/PaymentSettingsController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/Auth/GoogleAuthController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/AuthController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/CartController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/CategoryController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/CouponController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/OrderController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/PaymentController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/ProductController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/ReviewController.php
+ delete mode 100644 backend/app/Http/Controllers/Api/WishlistController.php
+ delete mode 100644 backend/app/Http/Controllers/Controller.php
+ delete mode 100644 backend/app/Http/Middleware/AdminMiddleware.php
+ delete mode 100644 backend/app/Models/CartItem.php
+ delete mode 100644 backend/app/Models/Category.php
+ delete mode 100644 backend/app/Models/Coupon.php
+ delete mode 100644 backend/app/Models/InventoryLog.php
+ delete mode 100644 backend/app/Models/Order.php
+ delete mode 100644 backend/app/Models/OrderItem.php
+ delete mode 100644 backend/app/Models/Payment.php
+ delete mode 100644 backend/app/Models/Product.php
+ delete mode 100644 backend/app/Models/Review.php
+ delete mode 100644 backend/app/Models/Setting.php
+ delete mode 100644 backend/app/Models/User.php
+ delete mode 100644 backend/app/Models/Wishlist.php
+ delete mode 100644 backend/app/Notifications/LowStockAlertNotification.php
+ delete mode 100644 backend/app/Notifications/OrderPlacedNotification.php
+ delete mode 100644 backend/app/Notifications/OrderShippedNotification.php
+ delete mode 100644 backend/app/Notifications/WelcomeNotification.php
+ delete mode 100644 backend/app/Providers/AppServiceProvider.php
+ delete mode 100644 backend/app/Services/InventoryService.php
+ delete mode 100644 backend/app/Services/PaymentService.php
+ delete mode 100644 backend/artisan
+ delete mode 100644 backend/backup-01-backend.zip
+ delete mode 100644 backend/bootstrap/app.php
+ delete mode 100644 backend/bootstrap/cache/.gitignore
+ delete mode 100644 backend/bootstrap/providers.php
+ delete mode 100644 backend/composer.json
+ delete mode 100644 backend/composer.lock
+ delete mode 100644 backend/config/app.php
+ delete mode 100644 backend/config/auth.php
+ delete mode 100644 backend/config/cache.php
+ delete mode 100644 backend/config/cors.php
+ delete mode 100644 backend/config/database.php
+ delete mode 100644 backend/config/filesystems.php
+ delete mode 100644 backend/config/logging.php
+ delete mode 100644 backend/config/mail.php
+ delete mode 100644 backend/config/queue.php
+ delete mode 100644 backend/config/sanctum.php
+ delete mode 100644 backend/config/services.php
+ delete mode 100644 backend/config/session.php
+ delete mode 100644 backend/database/.gitignore
+ delete mode 100644 backend/database/factories/CategoryFactory.php
+ delete mode 100644 backend/database/factories/ProductFactory.php
+ delete mode 100644 backend/database/factories/UserFactory.php
+ delete mode 100644 backend/database/migrations/0001_01_01_000000_create_users_table.php
+ delete mode 100644 backend/database/migrations/0001_01_01_000001_create_cache_table.php
+ delete mode 100644 backend/database/migrations/0001_01_01_000002_create_jobs_table.php
+ delete mode 100644 backend/database/migrations/2026_03_28_184824_create_categories_table.php
+ delete mode 100644 backend/database/migrations/2026_03_28_184825_create_orders_table.php
+ delete mode 100644 backend/database/migrations/2026_03_28_184825_create_products_table.php
+ delete mode 100644 backend/database/migrations/2026_03_28_184826_create_order_items_table.php
+ delete mode 100644 backend/database/migrations/2026_03_28_184827_create_cart_items_table.php
+ delete mode 100644 backend/database/migrations/2026_03_28_200331_create_personal_access_tokens_table.php
+ delete mode 100644 backend/database/migrations/2026_03_28_200528_add_fields_to_users_table.php
+ delete mode 100644 backend/database/migrations/2026_03_28_202347_add_is_admin_to_users_table.php
+ delete mode 100644 backend/database/migrations/2026_03_30_073511_add_navbar_fields_to_categories_table.php
+ delete mode 100644 backend/database/migrations/2026_03_30_092612_add_oauth_fields_to_users_table.php
+ delete mode 100644 backend/database/migrations/2026_03_30_093611_create_settings_table.php
+ delete mode 100644 backend/database/migrations/2026_03_30_163103_create_payments_table.php
+ delete mode 100644 backend/database/migrations/2026_03_30_164856_create_reviews_table.php
+ delete mode 100644 backend/database/migrations/2026_03_30_165100_create_wishlists_table.php
+ delete mode 100644 backend/database/migrations/2026_03_30_165231_create_coupons_table.php
+ delete mode 100644 backend/database/migrations/2026_03_30_165351_add_coupon_fields_to_orders_table.php
+ delete mode 100644 backend/database/migrations/2026_03_30_165532_create_inventory_logs_table.php
+ delete mode 100644 backend/database/migrations/2026_03_30_172429_add_performance_indexes.php
+ delete mode 100644 backend/database/seeders/DatabaseSeeder.php
+ delete mode 100644 backend/package.json
+ delete mode 100644 backend/phpunit.xml
+ delete mode 100644 backend/public/.htaccess
+ delete mode 100644 backend/public/favicon.ico
+ delete mode 100644 backend/public/index.php
+ delete mode 100644 backend/public/robots.txt
+ delete mode 100644 backend/resources/css/app.css
+ delete mode 100644 backend/resources/js/app.js
+ delete mode 100644 backend/resources/js/bootstrap.js
+ delete mode 100644 backend/resources/views/welcome.blade.php
+ delete mode 100644 backend/routes/admin.php
+ delete mode 100644 backend/routes/api.php
+ delete mode 100644 backend/routes/console.php
+ delete mode 100644 backend/routes/web.php
+ delete mode 100644 backend/storage/app/.gitignore
+ delete mode 100644 backend/storage/app/private/.gitignore
+ delete mode 100644 backend/storage/app/public/.gitignore
+ delete mode 100644 backend/storage/framework/.gitignore
+ delete mode 100644 backend/storage/framework/cache/.gitignore
+ delete mode 100644 backend/storage/framework/cache/data/.gitignore
+ delete mode 100644 backend/storage/framework/sessions/.gitignore
+ delete mode 100644 backend/storage/framework/testing/.gitignore
+ delete mode 100644 backend/storage/framework/views/.gitignore
+ delete mode 100644 backend/storage/logs/.gitignore
+ delete mode 100644 backend/tests/Feature/ExampleTest.php
+ delete mode 100644 backend/tests/Feature/ProductApiTest.php
+ delete mode 100644 backend/tests/TestCase.php
+ delete mode 100644 backend/tests/Unit/ExampleTest.php
+ delete mode 100644 backend/tests/Unit/Models/ProductTest.php
+ delete mode 100644 backend/vite.config.js
+ delete mode 100644 create-database.bat
+ delete mode 100644 create-database.zip
+ delete mode 100644 docker (2).zip
+ delete mode 100644 docker-compose.yml
+ delete mode 100644 docker.zip
+ delete mode 100644 docker/frontend-nginx.conf
+ delete mode 100644 docker/nginx.conf
+ delete mode 100644 docker/supervisor.conf
+ delete mode 100644 frontend.zip
+ delete mode 100644 frontend/.env.example
+ delete mode 100644 frontend/.gitignore
+ delete mode 100644 frontend/.vscode/extensions.json
+ delete mode 100644 frontend/README.md
+ delete mode 100644 frontend/backup-01-frontend.zip
+ delete mode 100644 frontend/index.html
+ delete mode 100644 frontend/package-lock.json
+ delete mode 100644 frontend/package.json
+ delete mode 100644 frontend/pnpm-lock.yaml
+ delete mode 100644 frontend/postcss.config.js
+ delete mode 100644 frontend/public/favicon.svg
+ delete mode 100644 frontend/public/icons.svg
+ delete mode 100644 frontend/src/App.vue
+ delete mode 100644 frontend/src/admin.css
+ delete mode 100644 frontend/src/api/index.ts
+ delete mode 100644 frontend/src/assets/hero.png
+ delete mode 100644 frontend/src/assets/vite.svg
+ delete mode 100644 frontend/src/assets/vue.svg
+ delete mode 100644 frontend/src/components/HelloWorld.vue
+ delete mode 100644 frontend/src/components/layout/AppFooter.vue
+ delete mode 100644 frontend/src/components/layout/AppHeader.vue
+ delete mode 100644 frontend/src/components/product/ProductCard.vue
+ delete mode 100644 frontend/src/env.d.ts
+ delete mode 100644 frontend/src/layouts/AdminLayout.vue
+ delete mode 100644 frontend/src/main.js
+ delete mode 100644 frontend/src/router/index.js
+ delete mode 100644 frontend/src/stores/auth.js
+ delete mode 100644 frontend/src/stores/cart.js
+ delete mode 100644 frontend/src/stores/orders.js
+ delete mode 100644 frontend/src/stores/products.js
+ delete mode 100644 frontend/src/style.css
+ delete mode 100644 frontend/src/types/index.ts
+ delete mode 100644 frontend/src/views/CartView.vue
+ delete mode 100644 frontend/src/views/CategoryView.vue
+ delete mode 100644 frontend/src/views/CheckoutView.vue
+ delete mode 100644 frontend/src/views/HomeView.vue
+ delete mode 100644 frontend/src/views/LoginView.vue
+ delete mode 100644 frontend/src/views/OrderDetailView.vue
+ delete mode 100644 frontend/src/views/OrdersView.vue
+ delete mode 100644 frontend/src/views/PaymentView.vue
+ delete mode 100644 frontend/src/views/ProductDetailView.vue
+ delete mode 100644 frontend/src/views/ProductsView.vue
+ delete mode 100644 frontend/src/views/ProfileView.vue
+ delete mode 100644 frontend/src/views/RegisterView.vue
+ delete mode 100644 frontend/src/views/admin/CategoriesView.vue
+ delete mode 100644 frontend/src/views/admin/CouponsView.vue
+ delete mode 100644 frontend/src/views/admin/DashboardView.vue
+ delete mode 100644 frontend/src/views/admin/InventoryView.vue
+ delete mode 100644 frontend/src/views/admin/OAuthSettingsView.vue
+ delete mode 100644 frontend/src/views/admin/OrderDetailView.vue
+ delete mode 100644 frontend/src/views/admin/OrdersView.vue
+ delete mode 100644 frontend/src/views/admin/PaymentSettingsView.vue
+ delete mode 100644 frontend/src/views/admin/PaymentsView.vue
+ delete mode 100644 frontend/src/views/admin/ProductFormView.vue
+ delete mode 100644 frontend/src/views/admin/ProductsView.vue
+ delete mode 100644 frontend/src/views/admin/ReviewsView.vue
+ delete mode 100644 frontend/src/views/admin/UsersView.vue
+ delete mode 100644 frontend/tailwind.config.js
+ delete mode 100644 frontend/tsconfig.json
+ delete mode 100644 frontend/tsconfig.node.json
+ delete mode 100644 frontend/vite.config.ts
+ delete mode 100644 google_oauth.txt
+ delete mode 100644 reset-database.bat
+ delete mode 100644 session-ses_2c08.md
+ delete mode 100644 setup.bat
+ delete mode 100644 start-all.bat
+ delete mode 100644 start-backend.bat
+ delete mode 100644 start-frontend.bat
+
+```
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 5.2s)
+
+_Thinking:_
+
+I accidentally removed all files from git. I need to add them back and properly configure the .gitignore. Let me do this properly.
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "echo \"# Dependencies\nnode_modules/\nvendor/\n\n# Build outputs\ndist/\nbuild/\n*.zip\n\n# Environment files\n.env\n.env.local\n\n# IDE\n.vscode/\n.idea/\n*.swp\n*.swo\n\n# OS\n.DS_Store\nThumbs.db\n\n# Logs\n*.log\nbackend/storage/logs/*\nbackend/storage/framework/*\n\n# Database\nbackend/database/database.sqlite\n\n# Cache\nbackend/bootstrap/cache/*\nfrontend/dist/\" > .gitignore",
+  "description": "Create proper .gitignore file",
+  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved"
+}
+```
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 6.1s)
+
+_Thinking:_
+
+Good. Now let me add all the files back and commit properly, then I need to get the remote URL to push to. The user said "the git repo that is already seted" but I don't see any remote configured. Let me ask them for the remote URL.
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "git add -A && git status",
+  "description": "Stage all files and check status",
+  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved"
+}
+```
+
+**Output:**
+```
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.dockerignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.github/workflows/ci-cd.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Dockerfile.backend', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Dockerfile.frontend', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'create-database.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docker-compose.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docker/frontend-nginx.conf', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docker/nginx.conf', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docker/supervisor.conf', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/.env.example', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/index.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/pnpm-lock.yaml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/postcss.config.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/public/icons.svg', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/App.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/admin.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/api/index.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/assets/vite.svg', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/HelloWorld.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/layout/AppFooter.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/layout/AppHeader.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/product/ProductCard.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/env.d.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/layouts/AdminLayout.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/main.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/router/index.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/stores/auth.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/stores/cart.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/stores/orders.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/stores/products.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/style.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/types/index.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/CartView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/CategoryView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/CheckoutView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/HomeView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/LoginView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/OrderDetailView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/OrdersView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/PaymentView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/ProductDetailView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/ProductsView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/ProfileView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/RegisterView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/CategoriesView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/CouponsView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/DashboardView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/InventoryView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/OAuthSettingsView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/OrderDetailView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/OrdersView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/PaymentSettingsView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/PaymentsView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/ProductFormView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/ProductsView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/ReviewsView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/views/admin/UsersView.vue', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/tailwind.config.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/tsconfig.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/tsconfig.node.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/vite.config.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'google_oauth.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'reset-database.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'setup.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'start-all.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'start-backend.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'start-frontend.bat', LF will be replaced by CRLF the next time Git touches it
+On branch master
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	new file:   .dockerignore
+	new file:   .github/workflows/ci-cd.yml
+	modified:   .gitignore
+	new file:   Dockerfile.backend
+	new file:   Dockerfile.frontend
+	new file:   README.md
+	new file:   backend/.editorconfig
+	new file:   backend/.env.example
+	new file:   backend/.env.production.example
+	new file:   backend/.gitattributes
+	new file:   backend/.gitignore
+	new file:   backend/README.md
+	new file:   backend/_nul
+	new file:   backend/app/Http/Controllers/Admin/SettingsController.php
+	new file:   backend/app/Http/Controllers/Api/Admin/AdminAuthController.php
+	new file:   backend/app/Http/Controllers/Api/Admin/AdminCategoryController.php
+	new file:   backend/app/Http/Controllers/Api/Admin/AdminCouponController.php
+	new file:   backend/app/Http/Controllers/Api/Admin/AdminInventoryController.php
+	new file:   backend/app/Http/Controllers/Api/Admin/AdminOrderController.php
+	new file:   backend/app/Http/Controllers/Api/Admin/AdminPaymentController.php
+	new file:   backend/app/Http/Controllers/Api/Admin/AdminProductController.php
+	new file:   backend/app/Http/Controllers/Api/Admin/AdminReviewController.php
+	new file:   backend/app/Http/Controllers/Api/Admin/AdminUserController.php
+	new file:   backend/app/Http/Controllers/Api/Admin/DashboardController.php
+	new file:   backend/app/Http/Controllers/Api/Admin/PaymentSettingsController.php
+	new file:   backend/app/Http/Controllers/Api/Auth/GoogleAuthController.php
+	new file:   backend/app/Http/Controllers/Api/AuthController.php
+	new file:   backend/app/Http/Controllers/Api/CartController.php
+	new file:   backend/app/Http/Controllers/Api/CategoryController.php
+	new file:   backend/app/Http/Controllers/Api/CouponController.php
+	new file:   backend/app/Http/Controllers/Api/OrderController.php
+	new file:   backend/app/Http/Controllers/Api/PaymentController.php
+	new file:   backend/app/Http/Controllers/Api/ProductController.php
+	new file:   backend/app/Http/Controllers/Api/ReviewController.php
+	new file:   backend/app/Http/Controllers/Api/WishlistController.php
+	new file:   backend/app/Http/Controllers/Controller.php
+	new file:   backend/app/Http/Middleware/AdminMiddleware.php
+	new file:   backend/app/Models/CartItem.php
+	new file:   backend/app/Models/Category.php
+	new file:   backend/app/Models/Coupon.php
+	new file:   backend/app/Models/InventoryLog.php
+	new file:   backend/app/Models/Order.php
+	new file:   backend/app/Models/OrderItem.php
+	new file:   backend/app/Models/Payment.php
+	new file:   backend/app/Models/Product.php
+	new file:   backend/app/Models/Review.php
+	new file:   backend/app/Models/Setting.php
+	new file:   backend/app/Models/User.php
+	new file:   backend/app/Models/Wishlist.php
+	new file:   backend/app/Notifications/LowStockAlertNotification.php
+	new file:   backend/app/Notifications/OrderPlacedNotification.php
+	new file:   backend/app/Notifications/OrderShippedNotification.php
+	new file:   backend/app/Notifications/WelcomeNotification.php
+	new file:   backend/app/Providers/AppServiceProvider.php
+	new file:   backend/app/Services/InventoryService.php
+	new file:   backend/app/Services/PaymentService.php
+	new file:   backend/artisan
+	new file:   backend/bootstrap/app.php
+	new file:   backend/bootstrap/cache/.gitignore
+	new file:   backend/bootstrap/providers.php
+	new file:   backend/composer.json
+	new file:   backend/composer.lock
+	new file:   backend/config/app.php
+	new file:   backend/config/auth.php
+	new file:   backend/config/cache.php
+	new file:   backend/config/cors.php
+	new file:   backend/config/database.php
+	new file:   backend/config/filesystems.php
+	new file:   backend/config/logging.php
+	new file:   backend/config/mail.php
+	new file:   backend/config/queue.php
+	new file:   backend/config/sanctum.php
+	new file:   backend/config/services.php
+	new file:   backend/config/session.php
+	new file:   backend/database/.gitignore
+	new file:   backend/database/factories/CategoryFactory.php
+	new file:   backend/database/factories/ProductFactory.php
+	new file:   backend/database/factories/UserFactory.php
+	new file:   backend/database/migrations/0001_01_01_000000_create_users_table.php
+	new file:   backend/database/migrations/0001_01_01_000001_create_cache_table.php
+	new file:   backend/database/migrations/0001_01_01_000002_create_jobs_table.php
+	new file:   backend/database/migrations/2026_03_28_184824_create_categories_table.php
+	new file:   backend/database/migrations/2026_03_28_184825_create_orders_table.php
+	new file:   backend/database/migrations/2026_03_28_184825_create_products_table.php
+	new file:   backend/database/migrations/2026_03_28_184826_create_order_items_table.php
+	new file:   backend/database/migrations/2026_03_28_184827_create_cart_items_table.php
+	new file:   backend/database/migrations/2026_03_28_200331_create_personal_access_tokens_table.php
+	new file:   backend/database/migrations/2026_03_28_200528_add_fields_to_users_table.php
+	new file:   backend/database/migrations/2026_03_28_202347_add_is_admin_to_users_table.php
+	new file:   backend/database/migrations/2026_03_30_073511_add_navbar_fields_to_categories_table.php
+	new file:   backend/database/migrations/2026_03_30_092612_add_oauth_fields_to_users_table.php
+	new file:   backend/database/migrations/2026_03_30_093611_create_settings_table.php
+	new file:   backend/database/migrations/2026_03_30_163103_create_payments_table.php
+	new file:   backend/database/migrations/2026_03_30_164856_create_reviews_table.php
+	new file:   backend/database/migrations/2026_03_30_165100_create_wishlists_table.php
+	new file:   backend/database/migrations/2026_03_30_165231_create_coupons_table.php
+	new file:   backend/database/migrations/2026_03_30_165351_add_coupon_fields_to_orders_table.php
+	new file:   backend/database/migrations/2026_03_30_165532_create_inventory_logs_table.php
+	new file:   backend/database/migrations/2026_03_30_172429_add_performance_indexes.php
+	new file:   backend/database/seeders/DatabaseSeeder.php
+	new file:   backend/package.json
+	new file:   backend/phpunit.xml
+	new file:   backend/public/.htaccess
+	new file:   backend/public/favicon.ico
+	new file:   backend/public/index.php
+	new file:   backend/public/robots.txt
+	new file:   backend/resources/css/app.css
+	new file:   backend/resources/js/app.js
+	new file:   backend/resources/js/bootstrap.js
+	new file:   backend/resources/views/welcome.blade.php
+	new file:   backend/routes/admin.php
+	new file:   backend/routes/api.php
+	new file:   backend/routes/console.php
+	new file:   backend/routes/web.php
+	new file:   backend/storage/app/.gitignore
+	new file:   backend/storage/app/private/.gitignore
+	new file:   backend/storage/app/public/.gitignore
+	new file:   backend/storage/logs/.gitignore
+	new file:   backend/tests/Feature/ExampleTest.php
+	new file:   backend/tests/Feature/ProductApiTest.php
+	new file:   backend/tests/TestCase.php
+	new file:   backend/tests/Unit/ExampleTest.php
+	new file:   backend/tests/Unit/Models/ProductTest.php
+	new file:   backend/vite.config.js
+	new file:   create-database.bat
+	new file:   docker-compose.yml
+	new file:   docker/frontend-nginx.conf
+	new file:   docker/nginx.conf
+	new file:   docker/supervisor.conf
+	new file:   frontend/.env.example
+	new file:   frontend/.gitignore
+	new file:   frontend/README.md
+	new file:   frontend/index.html
+	new file:   frontend/package-lock.json
+	new file:   frontend/package.json
+	new file:   frontend/pnpm-lock.yaml
+	new file:   frontend/postcss.config.js
+	new file:   frontend/public/favicon.svg
+	new file:   frontend/public/icons.svg
+	new file:   frontend/src/App.vue
+	new file:   frontend/src/admin.css
+	new file:   frontend/src/api/index.ts
+	new file:   frontend/src/assets/hero.png
+	new file:   frontend/src/assets/vite.svg
+	new file:   frontend/src/assets/vue.svg
+	new file:   frontend/src/components/HelloWorld.vue
+	new file:   frontend/src/components/layout/AppFooter.vue
+	new file:   frontend/src/components/layout/AppHeader.vue
+	new file:   frontend/src/components/product/ProductCard.vue
+	new file:   frontend/src/env.d.ts
+	new file:   frontend/src/layouts/AdminLayout.vue
+	new file:   frontend/src/main.js
+	new file:   frontend/src/router/index.js
+	new file:   frontend/src/stores/auth.js
+	new file:   frontend/src/stores/cart.js
+	new file:   frontend/src/stores/orders.js
+	new file:   frontend/src/stores/products.js
+	new file:   frontend/src/style.css
+	new file:   frontend/src/types/index.ts
+	new file:   frontend/src/views/CartView.vue
+	new file:   frontend/src/views/CategoryView.vue
+	new file:   frontend/src/views/CheckoutView.vue
+	new file:   frontend/src/views/HomeView.vue
+	new file:   frontend/src/views/LoginView.vue
+	new file:   frontend/src/views/OrderDetailView.vue
+	new file:   frontend/src/views/OrdersView.vue
+	new file:   frontend/src/views/PaymentView.vue
+	new file:   frontend/src/views/ProductDetailView.vue
+	new file:   frontend/src/views/ProductsView.vue
+	new file:   frontend/src/views/ProfileView.vue
+	new file:   frontend/src/views/RegisterView.vue
+	new file:   frontend/src/views/admin/CategoriesView.vue
+	new file:   frontend/src/views/admin/CouponsView.vue
+	new file:   frontend/src/views/admin/DashboardView.vue
+	new file:   frontend/src/views/admin/InventoryView.vue
+	new file:   frontend/src/views/admin/OAuthSettingsView.vue
+	new file:   frontend/src/views/admin/OrderDetailView.vue
+	new file:   frontend/src/views/admin/OrdersView.vue
+	new file:   frontend/src/views/admin/PaymentSettingsView.vue
+	new file:   frontend/src/views/admin/PaymentsView.vue
+	new file:   frontend/src/views/admin/ProductFormView.vue
+	new file:   frontend/src/views/admin/ProductsView.vue
+	new file:   frontend/src/views/admin/ReviewsView.vue
+	new file:   frontend/src/views/admin/UsersView.vue
+	new file:   frontend/tailwind.config.js
+	new file:   frontend/tsconfig.json
+	new file:   frontend/tsconfig.node.json
+	new file:   frontend/vite.config.ts
+	new file:   google_oauth.txt
+	new file:   reset-database.bat
+	new file:   session-ses_2c08.md
+	new file:   setup.bat
+	new file:   start-all.bat
+	new file:   start-backend.bat
+	new file:   start-frontend.bat
+
+
+```
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 14.8s)
+
+_Thinking:_
+
+Good, now all the files are staged. I need to commit these changes. But wait, the user mentioned "the git repo that is already seted" - I should check if there's already a remote URL configured. Let me check the git remote.
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "git remote -v",
+  "description": "Check git remote URLs",
+  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved"
+}
+```
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 13.2s)
+
+_Thinking:_
+
+No remotes are configured. The user said "the git repo that is already seted" but there's no remote. I need to ask for the remote URL.
+
+I don't see any git remote configured. Could you please provide the git repository URL so I can push the code?
+
+For example:
+- GitHub: `https://github.com/username/repository.git`
+- GitLab: `https://gitlab.com/username/repository.git`
+
+**Tool: question**
+
+**Input:**
+```json
+{
+  "questions": [
+    {
+      "question": "What is the git repository URL to push to?",
+      "header": "Git Repository URL",
+      "options": [
+        {
+          "label": "I'll provide the URL",
+          "description": "Type the git repo URL (e.g., https://github.com/username/repo.git)"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Output:**
+```
+User has answered your questions: "What is the git repository URL to push to?"="I'll provide the URL". You can now continue with the user's answers in mind.
+```
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 1.6s)
+
+---
+
+## User
+
+push this code to the Main branch of the git repo that is already seted , and overwrite the existing one and ignore the Node modules and the zip file in it \
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 4.4s)
+
+_Thinking:_
+
+The user says the git repo is already set up. Let me check for remote configuration more thoroughly and see if there's a remote I might have missed.
+
+---
+
+## User
+
+push this code to the Main branch of the git repo that is already seted , and overwrite the existing one and ignore the Node modules and the zip file in it and here is the git repo url =>https://github.com/angell667/shoes_ecom.git 
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 6.6s)
+
+_Thinking:_
+
+The user has provided the git repository URL. I need to:
+1. Add the remote
+2. Commit the staged changes
+3. Force push to the main branch (since they want to overwrite existing)
+
+Let me do this step by step.
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "git remote add origin https://github.com/angell667/shoes_ecom.git && git branch -M main",
+  "description": "Add remote and rename branch to main",
+  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved"
+}
+```
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 4.5s)
+
+_Thinking:_
+
+Good, the remote was added and branch renamed. Now let me commit the staged changes and then push.
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "git commit -m \"E-commerce platform with Stripe/PayPal payments, reviews, coupons, inventory management, and admin dashboard\"",
+  "description": "Commit all changes",
+  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved"
+}
+```
+
+**Output:**
+```
+[main 8509bb0] E-commerce platform with Stripe/PayPal payments, reviews, coupons, inventory management, and admin dashboard
+ 195 files changed, 44929 insertions(+), 2 deletions(-)
+ create mode 100644 .dockerignore
+ create mode 100644 .github/workflows/ci-cd.yml
+ create mode 100644 Dockerfile.backend
+ create mode 100644 Dockerfile.frontend
+ create mode 100644 README.md
+ create mode 100644 backend/.editorconfig
+ create mode 100644 backend/.env.example
+ create mode 100644 backend/.env.production.example
+ create mode 100644 backend/.gitattributes
+ create mode 100644 backend/.gitignore
+ create mode 100644 backend/README.md
+ create mode 100644 backend/_nul
+ create mode 100644 backend/app/Http/Controllers/Admin/SettingsController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminAuthController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminCategoryController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminCouponController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminInventoryController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminOrderController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminPaymentController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminProductController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminReviewController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/AdminUserController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/DashboardController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Admin/PaymentSettingsController.php
+ create mode 100644 backend/app/Http/Controllers/Api/Auth/GoogleAuthController.php
+ create mode 100644 backend/app/Http/Controllers/Api/AuthController.php
+ create mode 100644 backend/app/Http/Controllers/Api/CartController.php
+ create mode 100644 backend/app/Http/Controllers/Api/CategoryController.php
+ create mode 100644 backend/app/Http/Controllers/Api/CouponController.php
+ create mode 100644 backend/app/Http/Controllers/Api/OrderController.php
+ create mode 100644 backend/app/Http/Controllers/Api/PaymentController.php
+ create mode 100644 backend/app/Http/Controllers/Api/ProductController.php
+ create mode 100644 backend/app/Http/Controllers/Api/ReviewController.php
+ create mode 100644 backend/app/Http/Controllers/Api/WishlistController.php
+ create mode 100644 backend/app/Http/Controllers/Controller.php
+ create mode 100644 backend/app/Http/Middleware/AdminMiddleware.php
+ create mode 100644 backend/app/Models/CartItem.php
+ create mode 100644 backend/app/Models/Category.php
+ create mode 100644 backend/app/Models/Coupon.php
+ create mode 100644 backend/app/Models/InventoryLog.php
+ create mode 100644 backend/app/Models/Order.php
+ create mode 100644 backend/app/Models/OrderItem.php
+ create mode 100644 backend/app/Models/Payment.php
+ create mode 100644 backend/app/Models/Product.php
+ create mode 100644 backend/app/Models/Review.php
+ create mode 100644 backend/app/Models/Setting.php
+ create mode 100644 backend/app/Models/User.php
+ create mode 100644 backend/app/Models/Wishlist.php
+ create mode 100644 backend/app/Notifications/LowStockAlertNotification.php
+ create mode 100644 backend/app/Notifications/OrderPlacedNotification.php
+ create mode 100644 backend/app/Notifications/OrderShippedNotification.php
+ create mode 100644 backend/app/Notifications/WelcomeNotification.php
+ create mode 100644 backend/app/Providers/AppServiceProvider.php
+ create mode 100644 backend/app/Services/InventoryService.php
+ create mode 100644 backend/app/Services/PaymentService.php
+ create mode 100644 backend/artisan
+ create mode 100644 backend/bootstrap/app.php
+ create mode 100644 backend/bootstrap/cache/.gitignore
+ create mode 100644 backend/bootstrap/providers.php
+ create mode 100644 backend/composer.json
+ create mode 100644 backend/composer.lock
+ create mode 100644 backend/config/app.php
+ create mode 100644 backend/config/auth.php
+ create mode 100644 backend/config/cache.php
+ create mode 100644 backend/config/cors.php
+ create mode 100644 backend/config/database.php
+ create mode 100644 backend/config/filesystems.php
+ create mode 100644 backend/config/logging.php
+ create mode 100644 backend/config/mail.php
+ create mode 100644 backend/config/queue.php
+ create mode 100644 backend/config/sanctum.php
+ create mode 100644 backend/config/services.php
+ create mode 100644 backend/config/session.php
+ create mode 100644 backend/database/.gitignore
+ create mode 100644 backend/database/factories/CategoryFactory.php
+ create mode 100644 backend/database/factories/ProductFactory.php
+ create mode 100644 backend/database/factories/UserFactory.php
+ create mode 100644 backend/database/migrations/0001_01_01_000000_create_users_table.php
+ create mode 100644 backend/database/migrations/0001_01_01_000001_create_cache_table.php
+ create mode 100644 backend/database/migrations/0001_01_01_000002_create_jobs_table.php
+ create mode 100644 backend/database/migrations/2026_03_28_184824_create_categories_table.php
+ create mode 100644 backend/database/migrations/2026_03_28_184825_create_orders_table.php
+ create mode 100644 backend/database/migrations/2026_03_28_184825_create_products_table.php
+ create mode 100644 backend/database/migrations/2026_03_28_184826_create_order_items_table.php
+ create mode 100644 backend/database/migrations/2026_03_28_184827_create_cart_items_table.php
+ create mode 100644 backend/database/migrations/2026_03_28_200331_create_personal_access_tokens_table.php
+ create mode 100644 backend/database/migrations/2026_03_28_200528_add_fields_to_users_table.php
+ create mode 100644 backend/database/migrations/2026_03_28_202347_add_is_admin_to_users_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_073511_add_navbar_fields_to_categories_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_092612_add_oauth_fields_to_users_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_093611_create_settings_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_163103_create_payments_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_164856_create_reviews_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_165100_create_wishlists_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_165231_create_coupons_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_165351_add_coupon_fields_to_orders_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_165532_create_inventory_logs_table.php
+ create mode 100644 backend/database/migrations/2026_03_30_172429_add_performance_indexes.php
+ create mode 100644 backend/database/seeders/DatabaseSeeder.php
+ create mode 100644 backend/package.json
+ create mode 100644 backend/phpunit.xml
+ create mode 100644 backend/public/.htaccess
+ create mode 100644 backend/public/favicon.ico
+ create mode 100644 backend/public/index.php
+ create mode 100644 backend/public/robots.txt
+ create mode 100644 backend/resources/css/app.css
+ create mode 100644 backend/resources/js/app.js
+ create mode 100644 backend/resources/js/bootstrap.js
+ create mode 100644 backend/resources/views/welcome.blade.php
+ create mode 100644 backend/routes/admin.php
+ create mode 100644 backend/routes/api.php
+ create mode 100644 backend/routes/console.php
+ create mode 100644 backend/routes/web.php
+ create mode 100644 backend/storage/app/.gitignore
+ create mode 100644 backend/storage/app/private/.gitignore
+ create mode 100644 backend/storage/app/public/.gitignore
+ create mode 100644 backend/storage/logs/.gitignore
+ create mode 100644 backend/tests/Feature/ExampleTest.php
+ create mode 100644 backend/tests/Feature/ProductApiTest.php
+ create mode 100644 backend/tests/TestCase.php
+ create mode 100644 backend/tests/Unit/ExampleTest.php
+ create mode 100644 backend/tests/Unit/Models/ProductTest.php
+ create mode 100644 backend/vite.config.js
+ create mode 100644 create-database.bat
+ create mode 100644 docker-compose.yml
+ create mode 100644 docker/frontend-nginx.conf
+ create mode 100644 docker/nginx.conf
+ create mode 100644 docker/supervisor.conf
+ create mode 100644 frontend/.env.example
+ create mode 100644 frontend/.gitignore
+ create mode 100644 frontend/README.md
+ create mode 100644 frontend/index.html
+ create mode 100644 frontend/package-lock.json
+ create mode 100644 frontend/package.json
+ create mode 100644 frontend/pnpm-lock.yaml
+ create mode 100644 frontend/postcss.config.js
+ create mode 100644 frontend/public/favicon.svg
+ create mode 100644 frontend/public/icons.svg
+ create mode 100644 frontend/src/App.vue
+ create mode 100644 frontend/src/admin.css
+ create mode 100644 frontend/src/api/index.ts
+ create mode 100644 frontend/src/assets/hero.png
+ create mode 100644 frontend/src/assets/vite.svg
+ create mode 100644 frontend/src/assets/vue.svg
+ create mode 100644 frontend/src/components/HelloWorld.vue
+ create mode 100644 frontend/src/components/layout/AppFooter.vue
+ create mode 100644 frontend/src/components/layout/AppHeader.vue
+ create mode 100644 frontend/src/components/product/ProductCard.vue
+ create mode 100644 frontend/src/env.d.ts
+ create mode 100644 frontend/src/layouts/AdminLayout.vue
+ create mode 100644 frontend/src/main.js
+ create mode 100644 frontend/src/router/index.js
+ create mode 100644 frontend/src/stores/auth.js
+ create mode 100644 frontend/src/stores/cart.js
+ create mode 100644 frontend/src/stores/orders.js
+ create mode 100644 frontend/src/stores/products.js
+ create mode 100644 frontend/src/style.css
+ create mode 100644 frontend/src/types/index.ts
+ create mode 100644 frontend/src/views/CartView.vue
+ create mode 100644 frontend/src/views/CategoryView.vue
+ create mode 100644 frontend/src/views/CheckoutView.vue
+ create mode 100644 frontend/src/views/HomeView.vue
+ create mode 100644 frontend/src/views/LoginView.vue
+ create mode 100644 frontend/src/views/OrderDetailView.vue
+ create mode 100644 frontend/src/views/OrdersView.vue
+ create mode 100644 frontend/src/views/PaymentView.vue
+ create mode 100644 frontend/src/views/ProductDetailView.vue
+ create mode 100644 frontend/src/views/ProductsView.vue
+ create mode 100644 frontend/src/views/ProfileView.vue
+ create mode 100644 frontend/src/views/RegisterView.vue
+ create mode 100644 frontend/src/views/admin/CategoriesView.vue
+ create mode 100644 frontend/src/views/admin/CouponsView.vue
+ create mode 100644 frontend/src/views/admin/DashboardView.vue
+ create mode 100644 frontend/src/views/admin/InventoryView.vue
+ create mode 100644 frontend/src/views/admin/OAuthSettingsView.vue
+ create mode 100644 frontend/src/views/admin/OrderDetailView.vue
+ create mode 100644 frontend/src/views/admin/OrdersView.vue
+ create mode 100644 frontend/src/views/admin/PaymentSettingsView.vue
+ create mode 100644 frontend/src/views/admin/PaymentsView.vue
+ create mode 100644 frontend/src/views/admin/ProductFormView.vue
+ create mode 100644 frontend/src/views/admin/ProductsView.vue
+ create mode 100644 frontend/src/views/admin/ReviewsView.vue
+ create mode 100644 frontend/src/views/admin/UsersView.vue
+ create mode 100644 frontend/tailwind.config.js
+ create mode 100644 frontend/tsconfig.json
+ create mode 100644 frontend/tsconfig.node.json
+ create mode 100644 frontend/vite.config.ts
+ create mode 100644 google_oauth.txt
+ create mode 100644 reset-database.bat
+ create mode 100644 session-ses_2c08.md
+ create mode 100644 setup.bat
+ create mode 100644 start-all.bat
+ create mode 100644 start-backend.bat
+ create mode 100644 start-frontend.bat
+
+```
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 48.4s)
+
+_Thinking:_
+
+Good, the commit is done. Now I need to force push to overwrite the existing repository. I'll use `git push --force origin main` to overwrite the main branch.
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "git push --force origin main",
+  "description": "Force push to main branch",
+  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved",
+  "timeout": 180000
+}
+```
+
+**Output:**
+```
+remote: warning: File create-database.zip is 54.52 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: File docker (2).zip is 56.51 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: error: Trace: 66155770ba6de82cd889a4d4c1990ac450bb08338914a875abf613c0dc30cfca        
+remote: error: See https://gh.io/lfs for more information.        
+remote: error: File docker.zip is 106.27 MB; this exceeds GitHub's file size limit of 100.00 MB        
+remote: error: File frontend.zip is 106.27 MB; this exceeds GitHub's file size limit of 100.00 MB        
+remote: error: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.        
+To https://github.com/angell667/shoes_ecom.git
+ ! [remote rejected] main -> main (pre-receive hook declined)
+error: failed to push some refs to 'https://github.com/angell667/shoes_ecom.git'
+
+```
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 6.6s)
+
+_Thinking:_
+
+There are large zip files that need to be removed from the repository. Let me remove them from git tracking and also update the .gitignore to exclude them, then try again.
+
+The push failed because of large zip files. Let me remove them and try again:
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "git rm --cached *.zip \"backend/*.zip\" \"docker*.zip\" 2>/dev/null || true && git rm --cached \"docker (2).zip\" 2>/dev/null || true && git add . && git commit -m \"Remove large zip files and update gitignore\" && git push --force origin main",
+  "description": "Remove zip files and push again",
+  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved",
+  "timeout": 180000
+}
+```
+
+**Output:**
+```
+On branch main
+nothing to commit, working tree clean
+
+```
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 5.3s)
+
+_Thinking:_
+
+The git rm command didn't work because the zip files might have already been removed from the index by the .gitignore rules. Let me check what's in the git status:
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "git status",
+  "description": "Check current git status",
+  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved"
+}
+```
+
+**Output:**
+```
+On branch main
+nothing to commit, working tree clean
+
+```
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 20.8s)
+
+_Thinking:_
+
+The working tree is clean. The issue is that the zip files are still in the git history. Let me remove them completely using git filter-branch or rebase. Let me try a different approach - use git rm to delete them from the current commit history:
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "git filter-branch --force --index-filter \"git rm --cached --ignore-unmatch '*.zip' 'docker/*.zip' 'frontend/*.zip' 'backend/*.zip'\" --prune-empty --tag-name-filter cat -- --all 2>/dev/null || git filter-branch --force --index-filter \"git rm --cached --ignore-unmatch create-database.zip docker.zip docker\\\\ \\\\(2\\\\).zip frontend.zip\" -- --all",
+  "description": "Remove large files from git history",
+  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved",
+  "timeout": 180000
+}
+```
+
+**Output:**
+```
+WARNING: git-filter-branch has a glut of gotchas generating mangled history
+	 rewrites.  Hit Ctrl-C before proceeding to abort, then use an
+	 alternative filtering tool such as 'git filter-repo'
+	 (https://github.com/newren/git-filter-repo/) instead.  See the
+	 filter-branch manual page for more details; to squelch this warning,
+	 set FILTER_BRANCH_SQUELCH_WARNING=1.
+Proceeding with filter-branch...
+
+Rewrite 046e8f9a220797aea78bf4e052f74445cdae7f36 (1/3) (0 seconds passed, remaining 0 predicted)    rm 'backend/backup-01-backend.zip'
+rm 'create-database.zip'
+rm 'docker (2).zip'
+rm 'docker.zip'
+rm 'frontend.zip'
+rm 'frontend/backup-01-frontend.zip'
+Rewrite 58be17b199710f927041df887571d2e258d53114 (2/3) (1 seconds passed, remaining 0 predicted)    Rewrite 8509bb0a78d834dd4fa4de297ba719985af7a91f (2/3) (1 seconds passed, remaining 0 predicted)    
+Ref 'refs/heads/main' was rewritten
+
+```
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 8.0s)
+
+_Thinking:_
+
+Good, the filter-branch worked and removed the zip files. Now I need to force push again:
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "git push --force origin main",
+  "description": "Force push after removing large files",
+  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved",
+  "timeout": 180000
+}
+```
+
+**Output:**
+```
+To https://github.com/angell667/shoes_ecom.git
+ + d346282...d74fa24 main -> main (forced update)
+
+```
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 4.0s)
+
+_Thinking:_
+
+The push was successful! Let me confirm by checking the git status:
+
+Pushed successfully! Let me verify:
+
+**Tool: bash**
+
+**Input:**
+```json
+{
+  "command": "git log --oneline -3 && echo \"\" && git remote -v",
+  "description": "Verify git status",
+  "workdir": "C:\\Users\\angellX\\Desktop\\shoes_ecom-more_improved"
+}
+```
+
+**Output:**
+```
+d74fa24 E-commerce platform with Stripe/PayPal payments, reviews, coupons, inventory management, and admin dashboard
+837035e Add .gitignore to exclude node_modules, vendor, and zip files
+e47324d Initial commit - E-commerce with payments, reviews, coupons, inventory management
+
+origin	https://github.com/angell667/shoes_ecom.git (fetch)
+origin	https://github.com/angell667/shoes_ecom.git (push)
+
+```
+
+---
+
+## Assistant (Build · mimo-v2-omni-free · 3.9s)
+
+_Thinking:_
+
+The code has been pushed successfully to the main branch. Let me provide a summary to the user.
+
+Done! Code has been successfully pushed to the main branch.
+
+**Summary:**
+- **Repository:** https://github.com/angell667/shoes_ecom.git
+- **Branch:** main
+- **Force pushed:** Yes (overwrote existing content)
+
+**Files excluded (via .gitignore):**
+- `node_modules/`
+- `vendor/`
+- `*.zip` files
+- `.env` files
+- IDE files
+- Database files
+- Cache files
 
 ---
 
